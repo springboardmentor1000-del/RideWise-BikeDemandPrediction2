@@ -1,0 +1,12 @@
+# Ignore dataset folder
+#Data/
+
+# Ignore CSV files (extra safety)
+*.csv
+
+# Ignore Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore OS-generated files
+.DS_Store
+Thumbs.db
