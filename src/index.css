@@ -296,6 +296,113 @@
     from { opacity: 0; transform: scale(0.5); }
     to { opacity: 1; transform: scale(1); }
   }
+
+  /* Interactive Card Styles */
+  .interactive-card {
+    @apply relative overflow-hidden rounded-2xl bg-card border border-border p-6;
+    @apply hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5;
+    @apply transition-all duration-500 hover:-translate-y-1;
+  }
+
+  .interactive-card::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0;
+    @apply transition-opacity duration-500;
+  }
+
+  .interactive-card:hover::before {
+    @apply opacity-100;
+  }
+
+  /* Shimmer effect for loading/active states */
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+  }
+
+  /* Gradient border animation */
+  .gradient-border {
+    position: relative;
+    background: hsl(var(--card));
+    border-radius: 1rem;
+  }
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: var(--gradient-hero);
+    border-radius: inherit;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .gradient-border:hover::before {
+    opacity: 1;
+  }
+
+  /* Neon glow for dark mode */
+  .dark .neon-glow {
+    text-shadow: 0 0 10px hsl(var(--primary) / 0.5),
+                 0 0 20px hsl(var(--primary) / 0.3),
+                 0 0 30px hsl(var(--primary) / 0.2);
+  }
+
+  /* Enhanced icon styles */
+  .icon-wrapper {
+    @apply p-2 rounded-lg transition-all duration-300;
+  }
+
+  .icon-wrapper-primary {
+    @apply bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground;
+  }
+
+  .icon-wrapper-accent {
+    @apply bg-accent/10 text-accent hover:bg-accent hover:text-accent-foreground;
+  }
+
+  .icon-wrapper-success {
+    @apply bg-success/10 text-success hover:bg-success hover:text-success-foreground;
+  }
+
+  /* Floating particles background */
+  .particles-bg {
+    position: relative;
+  }
+
+  .particles-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: 
+      radial-gradient(circle at 20% 30%, hsl(var(--primary) / 0.08) 1px, transparent 1px),
+      radial-gradient(circle at 80% 70%, hsl(var(--accent) / 0.08) 1px, transparent 1px),
+      radial-gradient(circle at 40% 80%, hsl(var(--success) / 0.06) 1px, transparent 1px);
+    background-size: 100px 100px, 150px 150px, 120px 120px;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  .dark .particles-bg::after {
+    opacity: 0.8;
+  }
+
+  /* Stagger animations for lists */
+  .stagger-animation > * {
+    animation: slide-up 0.5s ease-out forwards;
+    opacity: 0;
+  }
+
+  .stagger-animation > *:nth-child(1) { animation-delay: 0.05s; }
+  .stagger-animation > *:nth-child(2) { animation-delay: 0.1s; }
+  .stagger-animation > *:nth-child(3) { animation-delay: 0.15s; }
+  .stagger-animation > *:nth-child(4) { animation-delay: 0.2s; }
+  .stagger-animation > *:nth-child(5) { animation-delay: 0.25s; }
 }
 
 @layer utilities {

@@ -1,7 +1,7 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { User, Mail, Bell, Shield, Save } from "lucide-react";
+import { User, Mail, Bell, Shield, Save, Settings, Palette, Lock, KeyRound, Smartphone, Globe } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
 
@@ -21,32 +21,47 @@ const Profile = () => {
     <DashboardLayout>
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Header */}
-        <div className="slide-up">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary">
-              <User className="h-5 w-5" />
+        <div className="slide-up relative">
+          <div className="absolute -top-8 -left-8 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
+          <div className="relative">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-3 rounded-xl gradient-primary shadow-lg shadow-primary/20">
+                <Settings className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Profile Settings</h1>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <User className="h-4 w-4 text-primary" />
+                  <span>Manage your account</span>
+                </div>
+              </div>
             </div>
-            <h1 className="text-2xl font-bold">Profile Settings</h1>
+            <p className="text-muted-foreground max-w-lg">
+              Customize your account settings and notification preferences.
+            </p>
           </div>
-          <p className="text-muted-foreground">
-            Manage your account settings and preferences.
-          </p>
         </div>
 
         {/* Profile Info */}
-        <div className="rounded-2xl bg-card border border-border p-6 space-y-6">
-          <h3 className="font-semibold flex items-center gap-2">
-            <User className="h-4 w-4 text-primary" />
+        <div className="rounded-2xl bg-card border border-border p-6 space-y-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <h3 className="font-semibold flex items-center gap-2 relative">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <User className="h-4 w-4 text-primary" />
+            </div>
             Personal Information
           </h3>
           
-          <div className="flex items-center gap-6">
-            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="h-10 w-10 text-primary" />
+          <div className="flex items-center gap-6 relative">
+            <div className="w-20 h-20 rounded-full gradient-primary flex items-center justify-center shadow-lg shadow-primary/20">
+              <User className="h-10 w-10 text-primary-foreground" />
             </div>
             <div>
-              <p className="font-semibold text-lg">{profileData.name}</p>
-              <p className="text-muted-foreground">{profileData.email}</p>
+              <p className="font-bold text-xl">{profileData.name}</p>
+              <p className="text-muted-foreground flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                {profileData.email}
+              </p>
             </div>
           </div>
           

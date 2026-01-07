@@ -10,7 +10,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Clock, Thermometer, Droplets, Wind, Cloud, Sparkles, TrendingUp, Zap } from "lucide-react";
+import { 
+  Clock, 
+  Thermometer, 
+  Droplets, 
+  Wind, 
+  Cloud, 
+  Sparkles, 
+  TrendingUp, 
+  Zap,
+  Timer,
+  Activity,
+  Gauge
+} from "lucide-react";
 
 const seasons = ["Spring", "Summer", "Fall", "Winter"];
 const weatherTypes = ["Clear", "Mist", "Light Rain/Snow", "Heavy Rain/Snow"];
@@ -91,16 +103,25 @@ const HourlyPrediction = () => {
     <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
-        <div className="slide-up">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-xl bg-accent/10 text-accent">
-              <Clock className="h-5 w-5" />
+        <div className="slide-up relative">
+          <div className="absolute -top-8 -left-8 w-32 h-32 bg-accent/10 rounded-full blur-3xl" />
+          <div className="relative">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-accent to-primary shadow-lg shadow-accent/20">
+                <Clock className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Hourly Prediction</h1>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Timer className="h-4 w-4 text-accent" />
+                  <span>Real-time Peak Detection</span>
+                </div>
+              </div>
             </div>
-            <h1 className="text-2xl font-bold">Hourly Prediction</h1>
+            <p className="text-muted-foreground max-w-lg">
+              Get precise hour-by-hour predictions with intelligent peak hour detection.
+            </p>
           </div>
-          <p className="text-muted-foreground">
-            Get precise hour-by-hour predictions including peak hour detection.
-          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
