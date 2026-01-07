@@ -10,7 +10,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Calendar, Thermometer, Droplets, Wind, Cloud, Sparkles, TrendingUp } from "lucide-react";
+import { 
+  Calendar, 
+  Thermometer, 
+  Droplets, 
+  Wind, 
+  Cloud, 
+  Sparkles, 
+  TrendingUp,
+  Sun,
+  Snowflake,
+  Leaf,
+  Flower2,
+  Gauge,
+  Activity,
+  BarChart3
+} from "lucide-react";
 
 const seasons = ["Spring", "Summer", "Fall", "Winter"];
 const years = ["2024", "2025", "2026"];
@@ -82,16 +97,25 @@ const DailyPrediction = () => {
     <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
-        <div className="slide-up">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary">
-              <Calendar className="h-5 w-5" />
+        <div className="slide-up relative">
+          <div className="absolute -top-8 -left-8 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
+          <div className="relative">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-3 rounded-xl gradient-primary shadow-lg shadow-primary/20">
+                <Calendar className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Daily Prediction</h1>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <BarChart3 className="h-4 w-4 text-primary" />
+                  <span>ML-Powered Forecasting</span>
+                </div>
+              </div>
             </div>
-            <h1 className="text-2xl font-bold">Daily Prediction</h1>
+            <p className="text-muted-foreground max-w-lg">
+              Forecast total bike rentals for an entire day based on comprehensive weather and seasonal factors.
+            </p>
           </div>
-          <p className="text-muted-foreground">
-            Forecast total bike rentals for an entire day based on comprehensive factors.
-          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
