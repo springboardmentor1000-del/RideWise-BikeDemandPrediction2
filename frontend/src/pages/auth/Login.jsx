@@ -5,26 +5,43 @@ import "../../styles/auth.css";
 
 export default function Login() {
   const [email, setEmail] = useState("");
-  const navigate = useNavigate();
+  const [password, setPassword] = useState("");
   const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const handleLogin = () => {
-    if (!email) return;
+  const handleSubmit = (e) => {
+    e.preventDefault();
     login(email);
     navigate("/home");
   };
 
   return (
     <div className="auth-page">
-      <h2>RideWise Login</h2>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <button onClick={handleLogin}>Login</button>
-      <p onClick={() => navigate("/signup")}>Create an account</p>
+      <form className="auth-card" onSubmit={handleSubmit}>
+        <h2>RideWise Login</h2>
+
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+
+        <button type="submit">Login</button>
+
+        <p onClick={() => navigate("/signup")}>
+          Create an account
+        </p>
+      </form>
     </div>
   );
 }

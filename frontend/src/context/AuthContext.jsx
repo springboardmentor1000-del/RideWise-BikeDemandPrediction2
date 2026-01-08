@@ -9,16 +9,12 @@ export function AuthProvider({ children }) {
     setUser({ email });
   };
 
-  const signup = (userData) => {
-    setUser({ email: userData.email, name: userData.name });
-  };
-
   const logout = () => {
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

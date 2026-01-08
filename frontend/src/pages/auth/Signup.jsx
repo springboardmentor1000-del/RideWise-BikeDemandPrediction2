@@ -1,17 +1,44 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/auth.css";
 
 export default function Signup() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    navigate("/login");
+  };
 
   return (
     <div className="auth-page">
-      <h2>Create RideWise Account</h2>
-      <input placeholder="Email" />
-      <input type="password" placeholder="Password" />
-      <input type="password" placeholder="Re-enter Password" />
-      <input placeholder="Mobile Number" />
-      <button onClick={() => navigate("/")}>Sign Up</button>
+      <form className="auth-card" onSubmit={handleSubmit}>
+        <h2>Create Account</h2>
+
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+
+        <button type="submit">Sign Up</button>
+
+        <p onClick={() => navigate("/login")}>
+          Back to Login
+        </p>
+      </form>
     </div>
   );
 }
