@@ -1,0 +1,16 @@
+# ===== Node / React =====
+node_modules/
+dist/
+.vite/
+
+# ===== Python / FastAPI =====
+__pycache__/
+*.pyc
+venv/
+.env
+
+# ===== OS =====
+.DS_Store
+
+# ===== Logs =====
+*.log
