@@ -4,3 +4,6 @@ pandas
 numpy
 scikit-learn
 lightgbm
+requests
+python-dotenv
+# plus your other existing backend requirements

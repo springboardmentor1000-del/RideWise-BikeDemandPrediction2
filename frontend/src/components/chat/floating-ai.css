@@ -1,0 +1,20 @@
+.floating-ai-btn {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #4facfe, #9b59b6);
+  color: white;
+  font-size: 26px;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  transition: transform 0.2s ease;
+}
+
+.floating-ai-btn:hover {
+  transform: scale(1.1);
+}

@@ -4,19 +4,21 @@ import { useAuth } from "../../context/AuthContext";
 import "../../styles/auth.css";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!email || !password) return;
     login(email);
     navigate("/home");
   };
 
   return (
-    <div className="auth-page">
+    <div className="auth-container">
       <form className="auth-card" onSubmit={handleSubmit}>
         <h2>RideWise Login</h2>
 
@@ -25,7 +27,6 @@ export default function Login() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          required
         />
 
         <input
@@ -33,12 +34,11 @@ export default function Login() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          required
         />
 
         <button type="submit">Login</button>
 
-        <p onClick={() => navigate("/signup")}>
+        <p className="auth-link" onClick={() => navigate("/signup")}>
           Create an account
         </p>
       </form>
