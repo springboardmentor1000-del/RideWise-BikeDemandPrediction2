@@ -29,6 +29,7 @@ import {
   Copy,
   Download
 } from "lucide-react";
+import BikeStationsMap from "@/components/BikeStationsMap";
 
 interface BikeType {
   id: string;
@@ -589,6 +590,9 @@ const BikeReservation = () => {
             </Card>
           </div>
         </div>
+
+        {/* Map Section */}
+        <BikeStationsMap className="mt-8" />
       </div>
     </DashboardLayout>
   );

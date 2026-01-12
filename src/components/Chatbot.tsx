@@ -12,8 +12,12 @@ import {
   Clock,
   Calendar,
   TrendingUp,
-  HelpCircle
+  HelpCircle,
+  Mic,
+  MicOff,
+  Volume2
 } from "lucide-react";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
 interface Message {
   id: string;
@@ -124,7 +128,7 @@ export const Chatbot = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      content: "Hi! 👋 I'm the RideWise Assistant. I can help you understand how our bike rental predictions work, explain weather factors, guide you through the platform, and answer any questions you have. What would you like to know?",
+      content: "Hi! 👋 I'm the RideWise Assistant. I can help you understand how our bike rental predictions work, explain weather factors, guide you through the platform, and answer any questions you have. You can type or use the 🎤 microphone button to speak! What would you like to know?",
       role: "assistant",
       timestamp: new Date(),
     },
@@ -132,6 +136,30 @@ export const Chatbot = () => {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Voice recognition hook
+  const { 
+    isListening, 
+    transcript, 
+    startListening, 
+    stopListening, 
+    isSupported: isVoiceSupported,
+    error: voiceError 
+  } = useSpeechRecognition();
+
+  // Update input when voice transcript changes
+  useEffect(() => {
+    if (transcript) {
+      setInput(transcript);
+    }
+  }, [transcript]);
+
+  // Auto-send when voice recording stops and we have a transcript
+  useEffect(() => {
+    if (!isListening && transcript && transcript.trim()) {
+      handleSend(transcript);
+    }
+  }, [isListening]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -290,6 +318,25 @@ export const Chatbot = () => {
 
           {/* Input */}
           <div className="p-4 border-t border-border bg-card">
+            {/* Voice indicator */}
+            {isListening && (
+              <div className="mb-3 flex items-center gap-2 p-2 rounded-lg bg-primary/10 border border-primary/30">
+                <div className="flex gap-1">
+                  <span className="w-1.5 h-4 bg-primary rounded-full animate-pulse" style={{ animationDelay: "0ms" }} />
+                  <span className="w-1.5 h-6 bg-primary rounded-full animate-pulse" style={{ animationDelay: "150ms" }} />
+                  <span className="w-1.5 h-4 bg-primary rounded-full animate-pulse" style={{ animationDelay: "300ms" }} />
+                  <span className="w-1.5 h-5 bg-primary rounded-full animate-pulse" style={{ animationDelay: "450ms" }} />
+                </div>
+                <span className="text-xs text-primary font-medium">Listening... Speak now</span>
+              </div>
+            )}
+            
+            {voiceError && (
+              <div className="mb-2 text-xs text-destructive bg-destructive/10 p-2 rounded-lg">
+                Voice error: {voiceError}. Please try again.
+              </div>
+            )}
+            
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -300,19 +347,41 @@ export const Chatbot = () => {
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about predictions, weather, features..."
+                placeholder={isListening ? "Listening..." : "Ask about predictions, weather, features..."}
                 className="flex-1 bg-secondary/50"
-                disabled={isTyping}
+                disabled={isTyping || isListening}
               />
+              
+              {/* Voice Button */}
+              {isVoiceSupported && (
+                <Button
+                  type="button"
+                  size="icon"
+                  variant={isListening ? "destructive" : "outline"}
+                  onClick={isListening ? stopListening : startListening}
+                  disabled={isTyping}
+                  className={`transition-all ${isListening ? 'animate-pulse' : 'hover:bg-primary/10 hover:text-primary hover:border-primary'}`}
+                  title={isListening ? "Stop listening" : "Start voice input"}
+                >
+                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </Button>
+              )}
+              
               <Button 
                 type="submit" 
                 size="icon" 
                 className="gradient-primary shadow-md shadow-primary/20 hover:shadow-primary/40 transition-shadow"
-                disabled={isTyping || !input.trim()}
+                disabled={isTyping || !input.trim() || isListening}
               >
                 <Send className="h-4 w-4" />
               </Button>
             </form>
+            
+            {!isVoiceSupported && (
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                Voice input not supported in this browser
+              </p>
+            )}
           </div>
         </div>
       )}
