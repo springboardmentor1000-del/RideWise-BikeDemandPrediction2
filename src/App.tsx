@@ -11,6 +11,9 @@ import DailyPrediction from "./pages/DailyPrediction";
 import HourlyPrediction from "./pages/HourlyPrediction";
 import ChatPage from "./pages/ChatPage";
 import Profile from "./pages/Profile";
+import Reviews from "./pages/Reviews";
+import BikeReservation from "./pages/BikeReservation";
+import PDFUpload from "./pages/PDFUpload";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +31,9 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/daily" element={<DailyPrediction />} />
           <Route path="/dashboard/hourly" element={<HourlyPrediction />} />
+          <Route path="/dashboard/reservation" element={<BikeReservation />} />
+          <Route path="/dashboard/reviews" element={<Reviews />} />
+          <Route path="/dashboard/upload" element={<PDFUpload />} />
           <Route path="/dashboard/chat" element={<ChatPage />} />
           <Route path="/dashboard/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />
