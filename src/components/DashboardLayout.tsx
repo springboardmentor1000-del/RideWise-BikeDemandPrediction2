@@ -16,7 +16,10 @@ import {
   ChevronRight,
   Sparkles,
   Bell,
-  Search
+  Search,
+  Star,
+  CalendarCheck,
+  FileUp
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -27,6 +30,9 @@ const navItems = [
   { icon: Home, label: "Home", path: "/dashboard", color: "primary" },
   { icon: Calendar, label: "Daily Prediction", path: "/dashboard/daily", color: "primary" },
   { icon: Clock, label: "Hourly Prediction", path: "/dashboard/hourly", color: "accent" },
+  { icon: CalendarCheck, label: "Bike Reservation", path: "/dashboard/reservation", color: "success" },
+  { icon: Star, label: "Reviews", path: "/dashboard/reviews", color: "warning" },
+  { icon: FileUp, label: "Upload PDF", path: "/dashboard/upload", color: "accent" },
   { icon: MessageCircle, label: "Chatbot", path: "/dashboard/chat", color: "success" },
   { icon: User, label: "Profile", path: "/dashboard/profile", color: "primary" },
 ];
