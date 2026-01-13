@@ -1,0 +1,87 @@
+@import "tailwindcss";
+/* Hide scrollbar but keep scroll */
+/* Hide scrollbar but keep scrolling */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE & Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.ridewise-font {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Transparent RideWise Button */
+.ridewise-line-btn {
+  position: relative;
+  padding: 14px 6px;
+  color: #e5e7eb;
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+/* Base thin line (hidden) */
+.ridewise-line-btn::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 0%;
+  background: linear-gradient(
+    90deg,
+    #38bdf8,
+    #6366f1,
+    #8b5cf6
+  );
+  transition: width 0.4s ease;
+}
+
+/* Line draw on hover */
+.ridewise-line-btn:hover::after {
+  width: 100%;
+}
+
+/* Slight glow text on hover */
+.ridewise-line-btn:hover {
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+}
+
+/* Accessibility */
+.ridewise-line-btn:focus {
+  outline: none;
+}
+.nav-link {
+  position: relative;
+  color: #e5e7eb;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* underline animation */
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  height: 2px;
+  width: 0%;
+  background: linear-gradient(90deg, #38bdf8, #6366f1, #8b5cf6);
+  transition: width 0.35s ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}

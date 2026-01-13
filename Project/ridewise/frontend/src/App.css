@@ -1,0 +1,10 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Rubik+Gemstones&display=swap');
+.logo-font {
+  font-family: 'Rubik Gemstones', cursive;
+}
+
+/* Section headings */
+.heading-font {
+  font-family: 'EB Garamond', serif;
+}
