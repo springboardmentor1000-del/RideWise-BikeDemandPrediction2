@@ -16,6 +16,25 @@ import { componentTagger } from "lovable-tagger";
 //     },
 //   },
 // }));
+// export default defineConfig(({ mode }) => ({
+//   server: {
+//     host: "::",
+//     port: 8080,
+//   },
+
+//   preview: {
+//     allowedHosts: ["ridewise-bikedemandprediction2-2.onrender.com"],
+//   },
+
+//   plugins: [react(), mode === "development" && componentTagger()].filter(
+//     Boolean
+//   ),
+//   resolve: {
+//     alias: {
+//       "@": path.resolve(__dirname, "./src"),
+//     },
+//   },
+// }));
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
@@ -23,7 +42,7 @@ export default defineConfig(({ mode }) => ({
   },
 
   preview: {
-    allowedHosts: ["ridewise-bikedemandprediction2-1.onrender.com"],
+    allowedHosts: "all",
   },
 
   plugins: [react(), mode === "development" && componentTagger()].filter(
