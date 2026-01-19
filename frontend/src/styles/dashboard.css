@@ -1893,3 +1893,127 @@ button:focus, .profile-circle:focus, .reserve-btn:focus, .primary-btn:focus, .ch
   color: #e74c3c;
   font-weight: 600;
 }
+
+.pdf-card {
+  max-width: 500px;
+  margin: auto;
+  text-align: center;
+}
+
+.pdf-card input {
+  margin-bottom: 16px;
+}
+
+.result-card {
+  margin-top: 30px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ================= CONTACT PAGE ================= */
+
+.contact-page {
+  padding: 40px;
+}
+
+.contact-title {
+  font-size: 42px;
+  text-align: center;
+  background: linear-gradient(90deg, #4dd2ff, #b26bff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.contact-subtitle {
+  text-align: center;
+  color: #9fb3ff;
+  max-width: 600px;
+  margin: 10px auto 40px;
+}
+
+.contact-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 32px;
+}
+
+.contact-card,
+.contact-info-card {
+  background: linear-gradient(180deg, #0f1730, #0b1225);
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.05);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+}
+
+.contact-card h3,
+.contact-info-card h3 {
+  margin-bottom: 18px;
+}
+
+.contact-card input,
+.contact-card textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 14px;
+  border-radius: 10px;
+  background: #121b36;
+  color: #fff;
+  border: 1px solid #1f2a44;
+}
+
+.contact-card textarea {
+  resize: none;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.info-row span {
+  font-size: 24px;
+}
+
+.info-row p {
+  margin: 2px 0 0;
+  color: #c7d2fe;
+}
+
+.contact-owner {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  color: #9fb3ff;
+}
+
+
+/* ================= POPUP TOAST ================= */
+
+.popup-toast {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: linear-gradient(135deg, #4dd2ff, #7f5cff);
+  color: #0b1225;
+  padding: 14px 22px;
+  border-radius: 12px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  animation: slideIn 0.4s ease;
+  z-index: 9999;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

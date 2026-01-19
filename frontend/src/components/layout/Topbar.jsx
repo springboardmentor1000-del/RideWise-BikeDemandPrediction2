@@ -20,15 +20,16 @@ export default function Topbar() {
       <nav className="topbar-nav">
         <NavLink to="/home">Home</NavLink>
         <NavLink to="/predict">Predict</NavLink>
+        <NavLink to="/pdf-predict">PDF Predict</NavLink> {/* ✅ ADDED */}
         <NavLink to="/map">Map</NavLink>
         <NavLink to="/ai">RideWise AI</NavLink>
         <NavLink to="/review">Review</NavLink>
-
+        <NavLink to="/contact">Contact</NavLink>
       </nav>
 
       {/* RIGHT */}
       <div className="topbar-right">
-        {/* ✅ FIXED RESERVE BUTTON */}
+        {/* RESERVE BUTTON */}
         <button
           className="reserve-btn"
           onClick={() => navigate("/reserve")}

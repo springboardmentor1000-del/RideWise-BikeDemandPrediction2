@@ -14,6 +14,9 @@ import RideWiseAI from "../pages/dashboard/RideWiseAI";
 import Profile from "../pages/dashboard/Profile";
 import Reservations from "../pages/dashboard/Reservations";
 import Review from "../pages/dashboard/Review";
+import PdfPredict from "../pages/dashboard/PdfPredict";
+import Contact from "../pages/dashboard/Contact";
+
 
 export default function App() {
   const { user } = useAuth();
@@ -98,6 +101,26 @@ export default function App() {
           path="*"
           element={<Navigate to={user ? "/home" : "/login"} />}
         />
+
+        <Route
+  path="/contact"
+  element={
+    <ProtectedRoute>
+      <Contact />
+    </ProtectedRoute>
+  }
+/>
+
+
+        <Route
+  path="/pdf-predict"
+  element={
+    <ProtectedRoute>
+      <PdfPredict />
+    </ProtectedRoute>
+  }
+/>
+
       </Routes>
     </>
   );
