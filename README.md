@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Welcome to your Lovable project
 
 ## Project info
@@ -71,3 +72,7 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+=======
+# RideWise-BikeDemandPrediction2
+Predicting bike-sharing demand using ML and weather/event data
+>>>>>>> 06a08bdf6aaf58381b0d7b1365a5245fe60577a1
