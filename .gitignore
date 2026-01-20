@@ -1,7 +1,0 @@
-myvenv/
-__pycache__/
-db.sqlite3
-*.pkl
-*.pyc
-.env
-
