@@ -1,0 +1,8 @@
+
+{
+  "name": "RideWise Pro",
+  "description": "Advanced bike ride demand forecasting dashboard using high-fidelity XGBoost simulation and Gemini AI multimodal parsing.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
