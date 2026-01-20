@@ -1,0 +1,173 @@
+{% extends 'predictor/base.html' %}
+{% load static %}
+{% block content %}
+
+
+<div class="hero">
+    <span class="badge">🚲 RideWise</span>
+    <h1>Predict <span>Daily Bike Demand</span></h1>
+    
+    <div class="form-container">
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" name="date" id="date" required>
+                
+            </div>
+    
+            <div class="form-group">
+                <label>Season</label>
+                <select name="season" id="season" required>
+                    <option value="1">Spring</option>
+                    <option value="2">Summer</option>
+                    <option value="3">Fall</option>
+                    <option value="4">Winter</option>
+                </select>
+            </div>
+    
+            <div class="form-group">
+                <label>Weather</label>
+                <select name="weathersit" id="weathersit" required>
+                    <option value="1">Clear/Few Clouds</option>
+                    <option value="2">Mist/Cloudy</option>
+                    <option value="3">Light Snow/Rain</option>
+                    <option value="4">Heavy Rain/Ice</option>
+                </select>
+            </div>
+    
+            <div class="form-group">
+                <label>Temp (°C)</label>
+                <input type="number" name="temp" id="temp" step="any" required>
+            </div>
+    
+            <div class="form-group">
+                <label>Humidity (%)</label>
+                <input type="number" name="hum" id="hum" step="any" required>
+            </div>
+    
+            <div class="form-group">
+                <label>Windspeed (km/h)</label>
+                <input type="number" name="windspeed" id="windspeed" step="any" required>
+            </div>
+            <button type="button" id="fetch-weather-btn" class="btn" style="width:auto; margin-left:10px;">Fetch Weather</button><br>
+            <label>Auto-fill from PDF Report</label>
+            <input type="file" id="pdf-upload" accept=".pdf" class="form-control">
+            <button type="button" id="extract-pdf-btn" class="btn" style="width:auto; margin-top:10px;">
+                Extract Values
+            </button>
+            <button type="submit" class="btn">Predict Demand</button>
+        </form>
+
+        
+    {% if prediction %}
+    <div class="stats">
+        <div class="stat-card">
+            <h2>{{ prediction }}</h2>
+            <p>Estimated bikes required today</p>
+        </div>
+    </div>
+    {% endif %}
+    </div>
+</div>
+
+<script>
+// Match the logic from your working book_hour.html
+document.getElementById('fetch-weather-btn').addEventListener('click', function() {
+    const dateField = document.getElementById('date');
+    const btn = this;
+
+    if (!dateField.value) {
+        alert("Please select a date first.");
+        return;
+    }
+
+    btn.innerText = "Locating...";
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            
+            btn.innerText = "Fetching Weather...";
+            try {
+                // Correct URL structure used in your working project
+                const response = await fetch(`/fetch-weather/?date=${dateField.value}&lat=${lat}&lon=${lon}`);
+                const data = await response.json();
+                
+                if (data.error) throw new Error(data.error);
+
+                // Now these IDs exist in the HTML above
+                document.getElementById('temp').value = data.temp;
+                document.getElementById('hum').value = data.hum;
+                document.getElementById('windspeed').value = data.windspeed;
+                document.getElementById('weathersit').value = data.weathersit;
+                document.getElementById('season').value = data.season;
+
+            } catch (error) {
+                alert("Error: " + error.message);
+            } finally {
+                btn.innerText = "Fetch Weather";
+            }
+        }, (error) => {
+            alert("Location access denied. Check browser permissions.");
+            btn.innerText = "Fetch Weather";
+        });
+    } else {
+        alert("Geolocation is not supported by your browser.");
+    }
+});
+
+document.getElementById('extract-pdf-btn').addEventListener('click', async function() {
+    const fileInput = document.getElementById('pdf-upload');
+    if (!fileInput || fileInput.files.length === 0) {
+        alert("Please select a PDF file first.");
+        return;
+    }
+
+    const btn = this;
+    const formData = new FormData();
+    formData.append('pdf_file', fileInput.files[0]);
+
+    btn.innerText = "Extracting...";
+    
+    try {
+        const response = await fetch('/extract-pdf-data/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        });
+
+        // Check if the server actually sent a valid response
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.error) throw new Error(data.error);
+
+        // Auto-fill fields for DAILY prediction (No Hour)
+        if (data.date) document.getElementById('date').value = data.date;
+        if (data.temp) document.getElementById('temp').value = data.temp;
+        if (data.hum) document.getElementById('hum').value = data.hum;
+        if (data.windspeed) document.getElementById('windspeed').value = data.windspeed;
+        if (data.weathersit) document.getElementById('weathersit').value = data.weathersit;
+        if (data.season) document.getElementById('season').value = data.season;
+        
+        alert("Values extracted successfully!");
+    } catch (error) {
+        console.error(error);
+        alert("Extraction Error: " + error.message);
+    } finally {
+        btn.innerText = "Extract Values";
+    }
+});
+</script>
+
+{% endblock %}
+
+

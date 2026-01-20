@@ -1,0 +1,25 @@
+{% extends 'predictor/base.html' %}
+
+{% block content %}
+<div style="padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh;" >
+    <div style="text-align: center;">
+    <div class="profile-icon" style="width: 80px; height: 80px; font-size: 2rem; margin: 0 auto 20px auto;">
+        {{ user.username|first|upper }}
+    </div>
+    <h2>User Profile</h2>
+    <div style="margin: 20px 0; text-align: left; border-top: 1px solid #eee; padding-top: 20px;">
+        <div class="form-group">
+            <label>Username:</label>
+            <span>{{ user.username }}</span>
+        </div>
+        <div class="form-group">
+            <label>Email:</label>
+            <span>{{ user.email }}</span>
+        </div>
+    </div>
+    
+    <a href="{% url 'logout' %}" class="btn" style="background: #ef4444; text-decoration: none; display: block;">Logout</a>
+
+</div>
+</div>
+{% endblock %}

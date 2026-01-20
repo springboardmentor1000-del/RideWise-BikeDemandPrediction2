@@ -1,0 +1,93 @@
+{% extends 'predictor/base.html' %}
+{% block content %}
+<section class="card" style="max-width: 600px; margin: 50px auto;">
+    <span class="badge">🚲 New Reservation</span>
+    <h2>Book Your Ride</h2>
+    
+    <form method="POST" id="resForm">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>Station (Detected Near You)</label>
+            <select name="station" id="stationSelect" required>
+                <option value="">Locating nearby stations...</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Date</label>
+            <input type="date" name="date" required>
+        </div>
+        <div class="form-group">
+            <label>Time</label>
+            <input type="time" name="time" required>
+        </div>
+        <div class="form-group">
+            <label>Duration (Hours) - Max 24h</label>
+            <input type="number" name="duration" id="duration" min="1" max="24" value="1" oninput="calcPrice()">
+        </div>
+        <div class="form-group">
+            <label>Number of Bikes</label>
+            <input type="number" name="num_bikes" id="num_bikes" min="1" max="10" value="1" oninput="calcPrice()">
+        </div>
+        
+        <div style="background: #e8fff4; padding: 20px; border-radius: 12px; margin-top: 20px; text-align: center;">
+            <h3 style="color: #16a34a;">Total Amount: ₹<span id="total_price">50</span></h3>
+            <p id="price_breakdown" style="font-size: 0.8rem; color: #666;"></p>
+        </div>
+
+        <button type="submit" class="btn">Confirm & Reserve</button>
+    </form>
+</section>
+
+<script>
+    // 1. TIERED PRICING LOGIC
+    function calcPrice() {
+        const duration = parseInt(document.getElementById('duration').value) || 0;
+        const bikes = parseInt(document.getElementById('num_bikes').value) || 0;
+        let ratePerBike = 0; // Default hourly rate
+
+        // Tiered logic
+        if (duration >= 24) {
+            ratePerBike = 250;
+        } else if (duration >= 12) {
+            ratePerBike = 200;
+        } else if (duration >= 6) {
+            ratePerBike = 120;
+        } else {
+            ratePerBike = 50 * duration;
+        }
+
+        const total = ratePerBike * bikes;
+        document.getElementById('total_price').innerText = total;
+        document.getElementById('price_breakdown').innerText = `Rate applied: ₹${ratePerBike} per bike for ${duration}h`;
+    }
+
+    // 2. GEOLOCATION FOR NEARBY STATIONS
+    document.addEventListener("DOMContentLoaded", function() {
+        const select = document.getElementById('stationSelect');
+        
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                const { latitude, longitude } = position.coords;
+                
+                // Simulated logic to match your map's nearby station detection
+                const nearbyStations = [
+                    "Local Hub A", 
+                    "City Center Point", 
+                    "Transit Station"
+                ];
+                
+                select.innerHTML = ""; // Clear the loading message
+                nearbyStations.forEach(name => {
+                    let opt = document.createElement('option');
+                    opt.value = name;
+                    opt.innerText = name;
+                    select.appendChild(opt);
+                });
+            }, () => {
+                // Fallback if user denies location
+                select.innerHTML = '<option value="Local Hub A">Local Hub A(Default)</option>';
+            });
+        }
+    });
+</script>
+{% endblock %}

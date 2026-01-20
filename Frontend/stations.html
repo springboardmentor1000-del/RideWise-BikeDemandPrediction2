@@ -1,0 +1,110 @@
+{% extends 'predictor/base.html' %}
+{% load static %}
+
+{% block content %}
+<div style="padding: 30px; min-height: 100vh; width: 100%;">
+    
+    <div style="margin-bottom: 30px; text-align: left;">
+        <h1 style="font-size: 2.5rem; color: #0a2540; margin-bottom: 10px;">Stations <span style="color: #1bbf73;">Near You</span></h1>
+        <p style="color: #64748b; font-size: 1.1rem;">Showing bicycle hubs within 5km of your current position.</p>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 25px; align-items: flex-start;">
+        
+        <div id="map" style="flex: 2; min-width: 350px; height: 550px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 8px solid white; z-index: 1;"></div>
+
+        <div id="details-panel" style="flex: 1; min-width: 300px;">
+            <div id="status-card" style="background: white; padding: 30px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #f0f0f0;">
+                <h2 id="st-name" style="font-size: 1.5rem; color: #0a2540; margin-bottom: 5px;">Detecting Location...</h2>
+                <p id="st-instruction" style="color: #94a3b8; font-size: 0.9rem;">Please allow location access to see nearby hubs.</p>
+                
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+                
+                <div id="info-content" style="display: none;">
+                    <div style="background: #e8fff4; padding: 18px; border-radius: 15px; margin-bottom: 15px; border-left: 5px solid #1bbf73;">
+                        <span style="display:block; font-size: 0.75rem; color: #16a34a; font-weight: 700; text-transform: uppercase;">Available Bikes</span>
+                        <b id="st-avail" style="font-size: 1.8rem; color: #0a2540;">-</b>
+                    </div>
+                    
+                    <div style="background: #f8fafc; padding: 18px; border-radius: 15px; margin-bottom: 15px;">
+                        <span style="display:block; font-size: 0.75rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Total Capacity</span>
+                        <b id="st-cap" style="font-size: 1.4rem; color: #0a2540;">-</b>
+                    </div>
+                    
+                    <div style="background: #fff5dc; padding: 18px; border-radius: 15px;">
+                        <span style="display:block; font-size: 0.75rem; color: #b45309; font-weight: 700; text-transform: uppercase;">Utilization Rate</span>
+                        <b id="st-util" style="font-size: 1.4rem; color: #0a2540;">-%</b>
+                    </div>
+
+                    <p id="st-coords" style="margin-top: 20px; font-size: 0.8rem; color: #cbd5e1; font-family: monospace;">Coordinates: -</p>
+                    
+                    <a href="{% url 'reserve' %}" style="display: block; margin-top: 25px; padding: 15px; background: #1bbf73; color: white; text-align: center; border-radius: 12px; font-weight: 600; text-decoration: none; transition: 0.3s;">Reserve a Bike Now</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+
+
+<script>
+    // 1. Initialize Map
+    var map = L.map('map').setView([20, 0], 2); 
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    function loadNearbyStations(userLat, userLng) {
+        const nearbyStations = [
+            { name: "Downtown Hub", lat: userLat + 0.003, lng: userLng + 0.002, avail: 14, cap: 20 },
+            { name: "Eastside Station", lat: userLat - 0.002, lng: userLng + 0.004, avail: 5, cap: 25 },
+            { name: "University Circle", lat: userLat + 0.005, lng: userLng - 0.003, avail: 19, cap: 30 }
+        ];
+
+        nearbyStations.forEach(st => {
+            let marker = L.circleMarker([st.lat, st.lng], {
+                radius: 12,
+                fillColor: "#1bbf73",
+                color: "white",
+                weight: 3,
+                fillOpacity: 0.9
+            }).addTo(map);
+
+            marker.on('click', function() {
+                document.getElementById('info-content').style.display = "block";
+                document.getElementById('st-instruction').style.display = "none";
+                document.getElementById('st-name').innerText = st.name;
+                document.getElementById('st-avail').innerText = st.avail;
+                document.getElementById('st-cap').innerText = st.cap;
+                document.getElementById('st-util').innerText = Math.round((st.avail/st.cap)*100) + "%";
+                document.getElementById('st-coords').innerText = `Coordinates: ${st.lat.toFixed(4)}, ${st.lng.toFixed(4)}`;
+            });
+        });
+    }
+
+    // 3. Geolocation Logic
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                map.setView([latitude, longitude], 15);
+                
+                // CRITICAL FIX: Refresh map tiles after the page finishes rendering
+                setTimeout(() => { map.invalidateSize(); }, 500);
+
+                L.marker([latitude, longitude]).addTo(map)
+                    .bindPopup("<b>Your Location</b>").openPopup();
+
+                document.getElementById('st-name').innerText = "Select a station";
+                loadNearbyStations(latitude, longitude);
+            },
+            () => {
+                document.getElementById('st-name').innerText = "Location Denied";
+            }
+        );
+    }
+</script>
+{% endblock %}

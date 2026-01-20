@@ -1,0 +1,37 @@
+{% extends 'predictor/base.html' %}
+{% load static %}
+
+{% block content %}
+<div style="padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; width: 100%;">
+    
+    <div style="text-align: center; margin-bottom: 50px;">
+        <span style="background: #e8fff4; color: #16a34a; padding: 8px 20px; border-radius: 50px; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border: 1px solid #16a34a;">
+            📊 Prediction Center
+        </span>
+        <h1 style="font-size: 2.8rem; color: #0a2540; margin-top: 20px; margin-bottom: 10px;">Demand <span style="color: #1bbf73;">Forecasting</span></h1>
+        <p style="color: #64748b; font-size: 1.1rem; max-width: 600px; margin: 0 auto;">Select a forecasting model below to optimize fleet management or plan your rentals efficiently.</p>
+    </div>
+
+    <div style="display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 1000px;">
+        
+        <div style="background: white; padding: 40px 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); flex: 1; min-width: 300px; max-width: 400px; text-align: center; border: 1px solid #f0f0f0; transition: transform 0.3s ease;">
+            <div style="font-size: 3rem; margin-bottom: 20px;">📅</div>
+            <h3 style="font-size: 1.5rem; color: #0a2540; margin-bottom: 15px;">Day Prediction</h3>
+            <p style="color: #64748b; line-height: 1.6; margin-bottom: 30px; height: 50px;">Analyze long-term trends to plan daily rentals and high-level fleet management.</p>
+            <a href="{% url 'book_day' %}" style="display: block; background: #1bbf73; color: white; padding: 14px; border-radius: 12px; font-weight: 600; text-decoration: none; transition: 0.3s; box-shadow: 0 4px 15px rgba(27, 191, 115, 0.3);">
+                Predict Daily Demand
+            </a>
+        </div>
+
+        <div style="background: white; padding: 40px 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); flex: 1; min-width: 300px; max-width: 400px; text-align: center; border: 1px solid #f0f0f0; transition: transform 0.3s ease;">
+            <div style="font-size: 3rem; margin-bottom: 20px;">⏱️</div>
+            <h3 style="font-size: 1.5rem; color: #0a2540; margin-bottom: 15px;">Hour Prediction</h3>
+            <p style="color: #64748b; line-height: 1.6; margin-bottom: 30px; height: 50px;">Optimize resources for peak-hour demand and real-time bike availability.</p>
+            <a href="{% url 'book_hour' %}" style="display: block; background: #1bbf73; color: white; padding: 14px; border-radius: 12px; font-weight: 600; text-decoration: none; transition: 0.3s; box-shadow: 0 4px 15px rgba(10, 37, 64, 0.2);">
+                Predict Hourly Demand
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

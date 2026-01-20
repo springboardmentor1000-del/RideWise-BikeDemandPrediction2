@@ -1,0 +1,22 @@
+{% extends 'predictor/base.html' %}
+
+{% block content_no_auth %}
+<div class="form-container">
+    <h2>Login</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>Username</label>
+            <input name="username" placeholder="Username" required>
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" name="password" placeholder="Password" required>
+        </div>
+        <button type="submit" class="btn">Login</button>
+        <p style="margin-top: 15px; text-align: center;">
+            No account? <a href="{% url 'signup' %}" style="color: #1bbf73; font-weight: bold;">Sign up</a>
+        </p>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'predictor/base.html' %}
+
+{% block content %}
+<section class="card" style="text-align: center; padding: 100px 20px;">
+    <span class="badge">🏠 User Panel</span>
+    <h2>Welcome to your Dashboard</h2>
+    <p>Hello, <strong>{{ user.username }}</strong>! We are glad to see you back.</p>
+    <p class="subtitle">Use the navigation bar above to explore predictions or manage your profile.</p>
+    <h2>Your Reservations</h2>
+    <table style="width:100%; border-collapse: collapse; margin-top: 20px;">
+        <thead>
+            <tr style="background: #f4f4f4; text-align: left;">
+                <th style="padding: 12px;" align="center">Station</th>
+                <th style="padding: 12px;" align="center">Date</th>
+                <th style="padding: 12px;" align="center">Time</th>
+                <th style="padding: 12px;" align="center">Bikes</th>
+                <th style="padding: 12px;" align="center">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for res in reservations %}
+            <tr style="border-bottom: 1px solid #ddd;">
+                <td style="padding: 12px;">{{ res.station }}</td>
+                <td style="padding: 12px;">{{ res.date }}</td>
+                <td style="padding: 12px;">{{ res.time }}</td>
+                <td style="padding: 12px;">{{ res.num_bikes }}</td>
+                <td style="padding: 12px;">
+                    <a href="{% url 'download_slip' res.id %}" class="btn" style="padding: 5px 15px; font-size: 12px;">Download Slip</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" style="padding: 20px; text-align: center;">No reservations found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+</section>
+{% endblock %}

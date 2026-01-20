@@ -1,0 +1,26 @@
+{% extends 'predictor/base.html' %}
+{% block content %}
+<section class="card" style="max-width: 800px; margin: 40px auto; padding: 30px;">
+    <h2>Community Reviews</h2>
+    
+    <form method="POST" style="margin-bottom: 30px;">
+        {% csrf_token %}
+        <textarea name="comment" placeholder="Share your experience..." required 
+                  style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd;"></textarea>
+        <button type="submit" class="btn" style="width: auto; padding: 10px 30px;">Post Review</button>
+    </form>
+
+    <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 20px;">
+
+    <div class="review-list">
+        {% for review in reviews %}
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                <p><strong>@{{ review.user.username }}</strong> <small style="color: #888;">{{ review.created_at|date:"M d, Y" }}</small></p>
+                <p style="margin-top: 5px; color: #4b5563;">{{ review.comment }}</p>
+            </div>
+        {% empty %}
+            <p>No reviews yet. Be the first to share your thoughts!</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Upload PDF for Demand Prediction</h2>
+    <p>Upload a PDF containing "Temperature", "Humidity", and "Windspeed".</p>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="pdf_file" class="form-label">Select PDF Report:</label>
+            <input type="file" name="pdf_file" id="pdf_file" class="form-control" accept=".pdf" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Extract and Predict</button>
+    </form>
+
+    {% if error_message %}
+        <div class="alert alert-danger mt-3">{{ error_message }}</div>
+    {% endif %}
+</div>
+{% endblock %}
