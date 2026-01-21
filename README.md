@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Bike-Rental_Ridewise_Prediction
 
 A full-stack application for predicting bike-sharing demand using machine learning models. The application consists of a React frontend and a Python Flask backend that serves ML models for hourly and daily demand predictions.
@@ -266,3 +267,6 @@ This project uses Firebase Authentication for user management:
 1. The Firebase configuration is in `src/firebase.ts`
 2. Make sure Firebase Authentication is enabled in your Firebase Console
 3. Enable Email/Password authentication method in Firebase Console
+=======
+# demo
+>>>>>>> d8505b7091967c34263747e9c2ef1863a95cf4ce
