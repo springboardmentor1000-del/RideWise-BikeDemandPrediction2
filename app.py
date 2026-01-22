@@ -11,9 +11,33 @@ import PyPDF2
 import pdfplumber
 import re
 from datetime import datetime
-import os
 import csv
 import pickle
+import os
+from openai import OpenAI
+
+import streamlit as st
+from openai import OpenAI
+
+# NVIDIA API Configuration - Using Streamlit Secrets
+try:
+    NVIDIA_API_KEY = st.secrets["NVIDIA_API_KEY"]
+    NVIDIA_BASE_URL = st.secrets["NVIDIA_BASE_URL"]
+except KeyError:
+    st.error("⚠️ API credentials not found. Please configure secrets in Streamlit Cloud.")
+    st.stop()
+
+# Initialize NVIDIA client
+nvidia_client = OpenAI(
+    base_url=NVIDIA_BASE_URL,
+    api_key=NVIDIA_API_KEY
+)
+
+# Initialize NVIDIA client
+nvidia_client = OpenAI(
+    base_url=NVIDIA_BASE_URL,
+    api_key=NVIDIA_API_KEY
+)
 
 # ============= MODEL LOADING =============
 @st.cache_resource
@@ -2459,6 +2483,8 @@ if 'chatbot_open' not in st.session_state:
     st.session_state.chatbot_open = False
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
+if 'voice_mode_active' not in st.session_state:
+    st.session_state.voice_mode_active = False
 if 'rating_widget_open' not in st.session_state:
     st.session_state.rating_widget_open = False
 if 'user_full_name' not in st.session_state:
@@ -2812,6 +2838,7 @@ def render_chatbot():
                     st.rerun()
             
             st.markdown("---")
+
             st.markdown("#### 💬 Conversation")
             
             if len(st.session_state.chat_history) == 0:
@@ -2824,7 +2851,55 @@ def render_chatbot():
                         st.markdown(f"**🤖 Bot:** {msg['content']}")
             
             st.markdown("---")
-            
+
+            # Voice mode indicator (shows when mic was used)
+            components.html("""
+                <script>
+                (function() {
+                    const wasVoice = sessionStorage.getItem('lastInputWasVoice') === 'true';
+                    if (wasVoice) {
+                        const sidebar = parent.document.querySelector('[data-testid="stSidebar"]');
+                        if (sidebar) {
+                            let indicator = sidebar.querySelector('.voice-indicator');
+                            if (!indicator) {
+                                indicator = document.createElement('div');
+                                indicator.className = 'voice-indicator';
+                                indicator.innerHTML = '🔊 Voice Mode Active';
+                                indicator.style.cssText = `
+                                    position: absolute;
+                                    top: 10px;
+                                    right: 10px;
+                                    background: rgba(0, 255, 255, 0.2);
+                                    border: 2px solid #00ffff;
+                                    border-radius: 8px;
+                                    padding: 0.5rem;
+                                    color: #00ffff;
+                                    font-size: 0.85rem;
+                                    font-weight: 600;
+                                    z-index: 9999;
+                                    animation: voicePulse 1.5s ease-in-out infinite;
+                                `;
+                                sidebar.appendChild(indicator);
+                                
+                                // Add animation
+                                const style = document.createElement('style');
+                                style.textContent = `
+                                    @keyframes voicePulse {
+                                        0%, 100% { opacity: 1; }
+                                        50% { opacity: 0.5; }
+                                    }
+                                `;
+                                document.head.appendChild(style);
+                                
+                                // Remove after 2 seconds
+                                setTimeout(() => indicator.remove(), 2000);
+                            }
+                        }
+                    }
+                })();
+                </script>
+            """, height=0)
+
             # CRITICAL FIX: Enhanced microphone with persistence
             components.html("""
                 <script>
@@ -2864,22 +2939,46 @@ def render_chatbot():
                             };
                             
                             recognition.onresult = function(event) {
-                                const transcript = event.results[0][0].transcript;
-                                setTimeout(function() {
-                                    const inputs = parent.document.querySelectorAll('[data-testid="stSidebar"] input[type="text"]');
-                                    if (inputs.length > 0) {
-                                        const input = inputs[inputs.length - 1];
-                                        const nativeSetter = Object.getOwnPropertyDescriptor(
-                                            window.HTMLInputElement.prototype, 'value'
-                                        ).set;
-                                        nativeSetter.call(input, transcript);
-                                        input.dispatchEvent(new Event('input', { bubbles: true }));
-                                        input.dispatchEvent(new Event('change', { bubbles: true }));
-                                        input.focus();
-                                    }
-                                }, 100);
-                            };
-                            
+    const transcript = event.results[0][0].transcript;
+
+    // CRITICAL: Set voice flag IMMEDIATELY and PERSIST
+    sessionStorage.setItem('lastInputWasVoice', 'true');
+    
+    // DOUBLE-CHECK: Verify flag was set
+    const flagCheck = sessionStorage.getItem('lastInputWasVoice');
+    console.log('[MIC] Voice flag SET:', flagCheck, '- transcript:', transcript);
+
+    // CRITICAL FIX: Longer delay to ensure flag persists before Send click
+    setTimeout(function() {
+        const inputs = parent.document.querySelectorAll('[data-testid="stSidebar"] input[type="text"]');
+        if (inputs.length > 0) {
+            const input = inputs[inputs.length - 1];
+            const nativeSetter = Object.getOwnPropertyDescriptor(
+                window.HTMLInputElement.prototype, 'value'
+            ).set;
+            nativeSetter.call(input, transcript);
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            input.focus();
+
+            // FIX: Increased delay from 200ms to 400ms to ensure flag persistence
+            setTimeout(function() {
+                // RE-VERIFY flag before clicking Send
+                const flagBeforeSend = sessionStorage.getItem('lastInputWasVoice');
+                console.log('[MIC] Flag status before Send click:', flagBeforeSend);
+                
+                const sendBtn = parent.document.querySelector('button[kind="primary"]') ||
+                               Array.from(parent.document.querySelectorAll('button'))
+                                   .find(b => b.textContent.includes('Send') || b.textContent.includes('📤'));
+                if (sendBtn) {
+                    console.log('[MIC] Auto-clicking send button');
+                    sendBtn.click();
+                }
+            }, 400);  // INCREASED from 200ms to 400ms
+        }
+    }, 150);  // INCREASED from 100ms to 150ms
+};
+
                             recognition.onend = function() {
                                 isRecording = false;
                                 btn.classList.remove('recording');
@@ -2952,14 +3051,20 @@ def render_chatbot():
             
             user_input = st.text_input("Type or 🎤 speak...", key="ci", label_visibility="collapsed")
             
-            c1, c2 = st.columns([2.5, 1.5])
+            c1, c2 = st.columns([2.5, 1.5])  # ← ADD THIS LINE (defines both c1 and c2)
+            
             with c1:
                 if st.button("📤 Send", use_container_width=True):
                     if user_input.strip():
                         st.session_state.chat_history.append({"role": "user", "content": user_input})
                         response = generate_bot_response(user_input)
                         st.session_state.chat_history.append({"role": "bot", "content": response})
+                        
+                        # Speak the response if it was a voice input
+                        speak_text(response)
+                        
                         st.rerun()
+            
             with c2:
                 if st.button("🗑️ Clear", use_container_width=True):
                     st.session_state.chat_history = []
@@ -2972,55 +3077,326 @@ def render_chatbot():
             }
             </style>
         """, unsafe_allow_html=True)
-
+# Add this near the end of render_chatbot() function
+# This code should already be there - verify it exists:
+# ESC key handler - place this at the END of render_chatbot() function
+components.html("""
+    <script>
+    (function() {
+        const parentDoc = window.parent.document;
+        
+        // Remove any existing ESC listeners to avoid duplicates
+        if (window.parent.escKeyHandler) {
+            parentDoc.removeEventListener('keydown', window.parent.escKeyHandler);
+        }
+        
+        // Create ESC key handler
+        window.parent.escKeyHandler = function(event) {
+            if (event.key === 'Escape' || event.keyCode === 27) {
+                const parentWin = window.parent;
+                
+                // Stop speech synthesis
+                if (parentWin.speechSynthesis && parentWin.speechSynthesis.speaking) {
+                    parentWin.speechSynthesis.cancel();
+                    
+                    // Remove speaking indicator
+                    const indicator = parentDoc.querySelector('.speaking-indicator');
+                    if (indicator) {
+                        indicator.remove();
+                    }
+                    
+                    // Clear voice flag
+                    parentWin.sessionStorage.removeItem('lastInputWasVoice');
+                    
+                    // Show notification
+                    const notification = parentDoc.createElement('div');
+                    notification.textContent = '⏹️ Speech stopped (ESC pressed)';
+                    notification.style.cssText = `
+                        position: fixed;
+                        bottom: 100px;
+                        right: 30px;
+                        background: rgba(255, 0, 85, 0.95);
+                        border: 2px solid #ff0055;
+                        border-radius: 10px;
+                        padding: 0.8rem 1.2rem;
+                        color: #fff;
+                        font-size: 1rem;
+                        font-weight: 600;
+                        z-index: 10002;
+                        box-shadow: 0 0 20px rgba(255, 0, 85, 0.5);
+                        animation: fadeInOut 2s ease;
+                    `;
+                    
+                    // Add animation
+                    const style = parentDoc.createElement('style');
+                    style.textContent = `
+                        @keyframes fadeInOut {
+                            0% { opacity: 0; transform: translateY(10px); }
+                            10% { opacity: 1; transform: translateY(0); }
+                            90% { opacity: 1; transform: translateY(0); }
+                            100% { opacity: 0; transform: translateY(-10px); }
+                        }
+                    `;
+                    parentDoc.head.appendChild(style);
+                    
+                    parentDoc.body.appendChild(notification);
+                    setTimeout(() => {
+                        notification.remove();
+                        style.remove();
+                    }, 2000);
+                    
+                    console.log('[ESC] Speech stopped successfully');
+                }
+            }
+        };
+        
+        // Attach ESC key listener to parent document
+        parentDoc.addEventListener('keydown', window.parent.escKeyHandler);
+        
+        console.log('[ESC] ESC key handler initialized');
+    })();
+    </script>
+""", height=0)
 
 
 def generate_bot_response(user_input):
-    """Generate static chatbot responses - can be replaced with API calls later"""
-    user_input_lower = user_input.lower()
+    """Generate dynamic chatbot responses using NVIDIA API - RideWise topics only"""
     
-    # Expanded response dictionary
-    responses = {
-        "hello": "Hello! 👋 Welcome to RideWise! I'm here to help you navigate the app and answer your questions. What would you like to know?",
-        "hi": "Hi there! 👋 How can I assist you with RideWise today?",
-        "hey": "Hey! 👋 Welcome! Ask me anything about bike rental predictions.",
-        "help": "I can help you with:\n\n• 📊 Making daily & hourly predictions\n• 🏠 Understanding the dashboard\n• 🗺️ Viewing bike stations on the map\n• 🎯 Navigating the app\n• 📈 Understanding prediction insights\n\nWhat would you like to explore?",
-        "prediction": "To make a prediction:\n\n1️⃣ Go to the **Predictions** tab\n2️⃣ Choose **Daily** or **Hourly** prediction\n3️⃣ Fill in parameters like season, weather, temperature\n4️⃣ Click **Predict** button\n\nThe AI will analyze and show you the expected bike rental demand! 🚴",
-        "daily": "Daily predictions estimate the total number of bike rentals for an entire day based on factors like season, weather, and whether it's a holiday or working day.",
-        "hourly": "Hourly predictions estimate bike rentals for a specific hour of the day. This helps you understand peak hours and optimize bike availability!",
-        "home": "The home page shows your **dashboard** with:\n\n📊 Live metrics\n📈 Weekly trends\n🌤️ Weather impact analysis\n⏰ 24-hour rental patterns\n🎯 Quick insights\n\nIt gives you a complete overview at a glance!",
-        "dashboard": "The dashboard displays real-time statistics, trends, and insights about bike rentals. You can see daily/hourly demand, weather impact, and performance metrics.",
-        "map": "The **Map** feature shows:\n\n🗺️ All bike stations\n🚴 Available bikes at each station\n📍 Station locations\n📊 Real-time availability\n\nYou can filter stations and see detailed statistics!",
-        "weather": "Weather has a huge impact on bike rentals! ☀️\n\n✅ Clear weather → Higher demand\n☁️ Cloudy → Moderate demand\n🌧️ Rain/Snow → Lower demand\n\nOur AI considers weather in predictions!",
-        "how": "RideWise uses **advanced machine learning** to predict bike rental demand.\n\nThe AI analyzes:\n• Historical patterns\n• Weather conditions\n• Time factors\n• Seasonal trends\n• Holiday impacts\n\nAccuracy: 95%+ 🎯",
-        "accuracy": "Our prediction models achieve **95%+ accuracy** through advanced machine learning algorithms trained on extensive historical data!",
-        "feature": "RideWise features:\n\n🔐 Secure login\n📊 Daily & hourly predictions\n🏠 Interactive dashboard\n🗺️ Live map with stations\n🤖 AI-powered chatbot (that's me!)\n📈 Real-time analytics",
-        "start": "To get started:\n\n1️⃣ Explore the **Dashboard** (Home)\n2️⃣ Try making a **Prediction**\n3️⃣ Check the **Map** for stations\n4️⃣ Ask me questions anytime!\n\nI'm here to help! 🚀",
-        "thank": "You're welcome! 😊 Feel free to ask anything else!",
-        "bye": "Goodbye! 👋 Come back anytime you need help with bike rental predictions!",
-        "navigate": "You can navigate using:\n\n🔹 Navigation buttons in the top menu\n🔹 Quick navigation buttons above\n🔹 Just ask me to \"go to predictions\" or \"show dashboard\"\n\nWhere would you like to go?",
-        "model": "Our ML models are trained on:\n\n📊 Historical rental data\n🌤️ Weather patterns\n📅 Seasonal variations\n⏰ Time-based trends\n\nYou can integrate your own models by following the instructions in the README file!",
-    }
+    # Pre-filter obvious off-topic queries
+    off_topic_keywords = [
+        'recipe', 'cooking', 'movie', 'film', 'sports', 'football', 'cricket',
+        'politics', 'election', 'president', 'news', 'stock', 'market',
+        'programming', 'code', 'python', 'java', 'website'
+    ]
     
-    # Check for keywords in user input
-    for key, response in responses.items():
-        if key in user_input_lower:
-            return response
+    user_lower = user_input.lower()
     
-    # Check for navigation requests
-    if any(word in user_input_lower for word in ["go to", "open", "show", "take me"]):
-        if "home" in user_input_lower or "dashboard" in user_input_lower:
-            return "Opening the dashboard for you! 🏠 Click the 'Home' button above."
-        elif "predict" in user_input_lower or "prediction" in user_input_lower:
-            return "Let's make a prediction! 📊 Click the 'Predict' button above."
-        elif "map" in user_input_lower:
-            return "Opening the map view! 🗺️ Click the 'Map' button above."
-    
-    # Default response with suggestions
-    return "I'm here to help! 🤖\n\nYou can ask me about:\n• How to make predictions\n• Dashboard features\n• Map functionality\n• Weather impact\n• App navigation\n\nOr just type 'help' for more options!"
+    # Quick check for obviously off-topic queries
+    if any(keyword in user_lower for keyword in off_topic_keywords):
+        # But check if they're asking about RideWise features
+        ridewise_keywords = ['ridewise', 'bike', 'rental', 'predict', 'map', 'dashboard', 'feedback']
+        if not any(keyword in user_lower for keyword in ridewise_keywords):
+            return """🤖 I'm specifically designed to help with RideWise bike rental predictions!
 
-# Navigation
-# Navigation
+I can assist you with:
+- 📊 Making daily and hourly predictions
+- 🗺️ Viewing the live station map
+- 🏠 Understanding the dashboard
+- 📄 Uploading PDFs for auto-filling parameters
+- ⭐ Submitting feedback
+
+What would you like to know about RideWise?"""
+    
+    system_prompt = """You are RideWise Assistant, an AI helper EXCLUSIVELY for the RideWise bike rental prediction system.
+
+IMPORTANT RESTRICTIONS:
+- You ONLY answer questions related to RideWise features, navigation, predictions, and bike rental topics
+- If users ask about unrelated topics (weather, sports, news, general knowledge, etc.), politely redirect them to RideWise features
+- If asked to help with tasks outside RideWise, explain that you're specifically designed for RideWise assistance
+
+RideWise Application Details:
+
+KEY FEATURES:
+- 📊 Daily & Hourly Predictions: Predict bike rental demand using AI (95%+ accuracy)
+- 🏠 Dashboard: Live metrics, weekly trends, weather impact, 24-hour patterns
+- 🗺️ Live Map: Real-time bike station locations and availability
+- 📄 Smart PDF Upload: Auto-extract prediction parameters from PDFs
+- ⭐ Feedback System: Rate experience and view all user feedback
+- 🤖 Voice Input: Speak your queries using the microphone button
+
+NAVIGATION PAGES:
+1. Home - Dashboard with statistics, charts, and insights
+2. Predictions - Make daily/hourly predictions with customizable parameters
+3. Map - View live bike stations with real-time availability
+4. Feedback - Submit ratings (1-5 stars) and written feedback
+
+PREDICTION PARAMETERS:
+- Season: Spring, Summer, Fall, Winter
+- Weather: Clear, Mist/Cloudy, Light Rain/Snow, Heavy Rain/Snow
+- Temperature: -10°C to 40°C
+- Humidity: 0% to 100%
+- Wind Speed: 0 to 60 km/h
+- Year: 2020-2030
+- Month: 1-12 (January to December)
+- Hour: 0-23 (for hourly predictions only)
+- Holiday: Yes/No
+- Working Day: Yes/No
+- Day Type: Weekday/Weekend
+
+HOW TO USE:
+1. Daily Prediction: Go to Predictions tab → Daily → Fill parameters → Click "Predict Daily Demand"
+2. Hourly Prediction: Go to Predictions tab → Hourly → Fill parameters including hour → Click "Predict Hourly Demand"
+3. PDF Upload: In prediction tabs, expand "Smart PDF Parameter Extraction" → Upload PDF → Click "Extract Parameters"
+4. View Map: Click Map tab → Filter stations → See real-time availability
+5. Give Feedback: Click Feedback tab → Rate with stars → Select category → Write feedback → Submit
+
+RESPONSE GUIDELINES:
+- Be helpful, friendly, and concise
+- Use emojis when appropriate (🚴, 📊, 🗺️, etc.)
+- Guide users step-by-step for complex tasks
+- If users ask unrelated questions, say: "I'm specifically designed to help with RideWise bike rental predictions. I can help you with [list 2-3 relevant features]. What would you like to know about RideWise?"
+
+Remember: Stay focused on RideWise features only!"""
+
+    try:
+        # Build messages with conversation history
+        messages = [{"role": "system", "content": system_prompt}]
+        
+        # Add last 5 messages from chat history for context
+        for msg in st.session_state.chat_history[-5:]:
+            messages.append({
+                "role": "user" if msg["role"] == "user" else "assistant",
+                "content": msg["content"]
+            })
+        
+        # Add current message
+        messages.append({"role": "user", "content": user_input})
+        
+        # Call NVIDIA API
+        completion = nvidia_client.chat.completions.create(
+            model="meta/llama-3.1-405b-instruct",
+            messages=messages,
+            temperature=0.5,  # Lower temperature for more focused responses
+            top_p=0.9,
+            max_tokens=500
+        )
+        
+        response = completion.choices[0].message.content
+        return response
+        
+    except Exception as e:
+        return f"🤖 I'm having trouble connecting right now. Please try again! (Error: {str(e)[:50]}...)"
+
+def speak_text(text):
+    """
+    Text-to-speech with CONSISTENT voice locked on first use.
+    """
+    # Clean text for safe JS embedding
+    clean_text = text.replace('🤖', '').replace('📊', '').replace('🗺️', '').replace('🚴', '').replace('⭐', '').replace('*', '').replace('`', '').replace('\n', ' ')
+    # Escape for JavaScript
+    clean_text = clean_text.replace('\\', '\\\\').replace('"', '\\"').replace("'", "\\'").replace('\n', ' ')
+
+    speak_js = f"""
+    <script>
+    (function() {{
+        const parentWin = window.parent || window;
+        const parentDoc = parentWin.document;
+
+        // Only speak if mic was used
+        const wasVoice = parentWin.sessionStorage.getItem('lastInputWasVoice') === 'true';
+        if (!wasVoice) {{
+            console.log('[SPEECH] Skipping - not a voice input');
+            return;
+        }}
+
+        console.log('[SPEECH] Voice input detected - speaking response');
+
+        if (!('speechSynthesis' in parentWin)) {{
+            console.error('[SPEECH] Speech synthesis not supported');
+            parentWin.sessionStorage.removeItem('lastInputWasVoice');
+            return;
+        }}
+
+        // Stop any existing speech
+        parentWin.speechSynthesis.cancel();
+        parentDoc.querySelectorAll('.speaking-indicator').forEach(el => el.remove());
+
+        // FIX: FORCE load voices first, THEN lock to one
+        function ensureVoicesLoaded(callback) {{
+            const voices = parentWin.speechSynthesis.getVoices();
+            if (voices.length > 0) {{
+                callback(voices);
+            }} else {{
+                console.log('[SPEECH] Waiting for voices to load...');
+                parentWin.speechSynthesis.addEventListener('voiceschanged', function() {{
+                    callback(parentWin.speechSynthesis.getVoices());
+                }}, {{ once: true }});
+                
+                // Trigger voice loading
+                const dummy = new parentWin.SpeechSynthesisUtterance('');
+                parentWin.speechSynthesis.speak(dummy);
+                parentWin.speechSynthesis.cancel();
+            }}
+        }}
+
+        // FIX: Get and LOCK to consistent voice
+        function getLockedVoice(voices) {{
+            const cachedName = parentWin.sessionStorage.getItem('ridewise_voice_name');
+            
+            // Try to use cached voice first
+            if (cachedName) {{
+                const cached = voices.find(v => v.name === cachedName);
+                if (cached) {{
+                    console.log('[SPEECH] ✅ Using LOCKED voice:', cachedName);
+                    return cached;
+                }}
+            }}
+            
+            // Select and LOCK voice (priority order)
+            let voice = voices.find(v => v.lang === 'en-US' && v.name.toLowerCase().includes('google'));
+            if (!voice) voice = voices.find(v => v.lang === 'en-US' && v.name.toLowerCase().includes('microsoft'));
+            if (!voice) voice = voices.find(v => v.lang === 'en-US' && (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('samantha')));
+            if (!voice) voice = voices.find(v => v.lang === 'en-US');
+            if (!voice && voices.length > 0) voice = voices[0];
+            
+            if (voice) {{
+                parentWin.sessionStorage.setItem('ridewise_voice_name', voice.name);
+                console.log('[SPEECH] 🔒 LOCKED to voice:', voice.name, '(will use this EVERY time)');
+            }}
+            
+            return voice;
+        }}
+
+        // Wait for voices, then speak
+        ensureVoicesLoaded(function(voices) {{
+            const voice = getLockedVoice(voices);
+            
+            const utterance = new parentWin.SpeechSynthesisUtterance("{clean_text}");
+            utterance.rate = 0.95;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            
+            if (voice) {{
+                utterance.voice = voice;
+                console.log('[SPEECH] Speaking with:', voice.name);
+            }}
+            
+            const indicator = parentDoc.createElement('div');
+            indicator.className = 'speaking-indicator';
+            indicator.innerHTML = `
+                <div style="position: fixed; bottom: 100px; right: 30px; background: linear-gradient(135deg, #00ffff 0%, #8a2be2 100%);
+                    color: white; padding: 14px 22px; border-radius: 50px; box-shadow: 0 0 30px rgba(0, 255, 255, 0.7);
+                    z-index: 10000; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600;">
+                    <span style="font-size: 22px; animation: speakPulse 1.4s ease-in-out infinite;">🔊</span>
+                    <span>Speaking... (ESC to stop)</span>
+                </div>
+                <style>
+                    @keyframes speakPulse {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.25); }} }}
+                </style>
+            `;
+            parentDoc.body.appendChild(indicator);
+
+            utterance.onend = function() {{
+                console.log('[SPEECH] ✅ Speech completed');
+                indicator.remove();
+                parentWin.sessionStorage.removeItem('lastInputWasVoice');
+            }};
+
+            utterance.onerror = function(e) {{
+                console.error('[SPEECH] ❌ Error:', e);
+                indicator.remove();
+                parentWin.sessionStorage.removeItem('lastInputWasVoice');
+            }};
+
+            console.log('[SPEECH] 🎤 Starting speech...');
+            parentWin.speechSynthesis.speak(utterance);
+        }});
+    }})();
+    </script>
+    """
+
+    components.html(speak_js, height=0)
+
 def render_navbar():
     # Create 3 columns: Logo | Navigation | User + Theme Toggle
     col1, col2, col3 = st.columns([2, 6, 2])
