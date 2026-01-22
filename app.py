@@ -2474,8 +2474,9 @@ if 'chatbot_open' not in st.session_state:
     st.session_state.chatbot_open = False
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
-if 'voice_mode_active' not in st.session_state:
-    st.session_state.voice_mode_active = False
+# ✅ SPEECH FIX: Add session state for speech control
+if 'should_speak_response' not in st.session_state:
+    st.session_state.should_speak_response = False
 if 'rating_widget_open' not in st.session_state:
     st.session_state.rating_widget_open = False
 if 'user_full_name' not in st.session_state:
@@ -2842,6 +2843,15 @@ def render_chatbot():
                         st.markdown(f"**🤖 Bot:** {msg['content']}")
             
             st.markdown("---")
+            
+            # ✅ SPEECH FIX: Speak bot response for ALL queries (voice AND text)
+            if len(st.session_state.chat_history) > 0:
+                last_message = st.session_state.chat_history[-1]
+                # Check if this is a new response (not already spoken)
+                if last_message['role'] == 'bot' and st.session_state.get('should_speak_response', False):
+                    speak_text(last_message['content'])
+                    st.session_state.should_speak_response = False
+
 
             # Voice mode indicator (shows when mic was used)
             components.html("""
@@ -2897,86 +2907,66 @@ def render_chatbot():
                 (function() {
                     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
                     if (!SR) return;
-                    
+
                     let isRecording = false;
                     let recognition = null;
                     const buttonId = 'mic-btn-' + Date.now();
-                    
+
                     function createMicButton() {
                         const btn = document.createElement('button');
                         btn.innerHTML = '🎤';
                         btn.className = 'mic-button';
                         btn.id = buttonId;
                         btn.type = 'button';
-                        
+
                         btn.onclick = function(e) {
                             e.preventDefault();
                             e.stopPropagation();
-                            
+
                             if (isRecording) {
                                 if (recognition) recognition.stop();
                                 return;
                             }
-                            
+
                             recognition = new SR();
                             recognition.lang = 'en-US';
                             recognition.continuous = false;
                             recognition.interimResults = false;
-                            
+
                             recognition.onstart = function() {
                                 isRecording = true;
                                 btn.classList.add('recording');
-                                btn.innerHTML = '🔴';
+                                btn.innerHTML = '⏹️';
                             };
-                            
+
                             recognition.onresult = function(event) {
                                 const transcript = event.results[0][0].transcript;
-
-                                // FIX 1: Set flag IMMEDIATELY and log it
-                                parent.sessionStorage.setItem('lastInputWasVoice', 'true');
-                                console.log('[MIC] ✅ Voice flag SET:', parent.sessionStorage.getItem('lastInputWasVoice'));
-
-                                // FIX 2: Add flag to localStorage as backup
-                                parent.localStorage.setItem('voiceInputActive', 'true');
-                                
-                                // FIX 3: Set window property as third backup
-                                parent.window.VOICE_INPUT_ACTIVE = true;
 
                                 setTimeout(function() {
                                     const inputs = parent.document.querySelectorAll('[data-testid="stSidebar"] input[type="text"]');
                                     if (inputs.length > 0) {
                                         const input = inputs[inputs.length - 1];
-                                        const nativeSetter = Object.getOwnPropertyDescriptor(
-                                            window.HTMLInputElement.prototype, 'value'
-                                        ).set;
+                                        const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+
+                                        // ✅ VOICE FIX: Add voice marker to transcript
                                         nativeSetter.call(input, transcript);
+                                        // ✅ FIX: Use sessionStorage instead of text prefix
+                                        sessionStorage.setItem('lastInputWasVoice', 'true');
                                         input.dispatchEvent(new Event('input', { bubbles: true }));
                                         input.dispatchEvent(new Event('change', { bubbles: true }));
                                         input.focus();
 
-                                        // FIX 4: Increased delay BEFORE clicking Send
                                         setTimeout(function() {
-                                            // FIX 5: RE-SET flag right before Send (in case it got cleared)
-                                            parent.sessionStorage.setItem('lastInputWasVoice', 'true');
-                                            parent.localStorage.setItem('voiceInputActive', 'true');
-                                            parent.window.VOICE_INPUT_ACTIVE = true;
-                                            
-                                            console.log('[MIC] 🔄 Re-confirmed flags before Send');
-                                            
-                                            const sendBtn = parent.document.querySelector('button[kind="primary"]') ||
+                                            const sendBtn = parent.document.querySelector('button[kind="primary"]') || 
                                                            Array.from(parent.document.querySelectorAll('button'))
-                                                               .find(b => b.textContent.includes('Send') || b.textContent.includes('📤'));
+                                                                .find(b => b.textContent.includes('Send') || b.textContent.includes('📤'));
                                             if (sendBtn) {
-                                                console.log('[MIC] 🎯 Clicking Send with flags:', {
-                                                    session: parent.sessionStorage.getItem('lastInputWasVoice'),
-                                                    local: parent.localStorage.getItem('voiceInputActive'),
-                                                    window: parent.window.VOICE_INPUT_ACTIVE
-                                                });
+                                                console.log('[MIC] Clicking Send');
                                                 sendBtn.click();
                                             }
-                                        }, 500);  // INCREASED from 400ms to 500ms
+                                        }, 500);
                                     }
-                                }, 200);  // INCREASED from 150ms to 200ms
+                                }, 200);
                             };
 
                             recognition.onend = function() {
@@ -2984,23 +2974,24 @@ def render_chatbot():
                                 btn.classList.remove('recording');
                                 btn.innerHTML = '🎤';
                             };
-                            
+
                             recognition.onerror = function(event) {
-                                console.error('[MIC] ❌ Speech error:', event.error);
+                                console.error('[MIC] Speech error:', event.error);
                                 isRecording = false;
                                 btn.classList.remove('recording');
                                 btn.innerHTML = '🎤';
                             };
-                            
+
                             try {
                                 recognition.start();
                             } catch (err) {
-                                console.error('[MIC] ❌ Start error:', err);
+                                console.error('[MIC] Start error:', err);
                             }
                         };
+
                         return btn;
                     }
-                    
+
                     function attachMicButton() {
                         const inputs = parent.document.querySelectorAll('[data-testid="stSidebar"] input[type="text"]');
                         if (inputs.length > 0) {
@@ -3014,25 +3005,11 @@ def render_chatbot():
                         }
                         return false;
                     }
-                    
+
                     [100, 300, 500, 800, 1200, 1800, 2500].forEach(delay => {
                         setTimeout(attachMicButton, delay);
                     });
-                    
-                    function setupObserver() {
-                        const sidebar = parent.document.querySelector('[data-testid="stSidebar"]');
-                        if (sidebar) {
-                            const observer = new MutationObserver(function() {
-                                clearTimeout(window.micTimeout);
-                                window.micTimeout = setTimeout(attachMicButton, 250);
-                            });
-                            observer.observe(sidebar, { childList: true, subtree: true });
-                        } else {
-                            setTimeout(setupObserver, 400);
-                        }
-                    }
-                    setupObserver();
-                    
+
                     setInterval(function() {
                         const inputs = parent.document.querySelectorAll('[data-testid="stSidebar"] input[type="text"]');
                         if (inputs.length > 0) {
@@ -3044,6 +3021,31 @@ def render_chatbot():
                     }, 600);
                 })();
                 </script>
+                <style>
+                .mic-button {
+                    position: absolute;
+                    right: 8px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background: linear-gradient(135deg, #00ffff 0%, #8a2be2 100%);
+                    border: none;
+                    border-radius: 50%;
+                    width: 36px;
+                    height: 36px;
+                    cursor: pointer;
+                    font-size: 1.2rem;
+                    box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+                    z-index: 10;
+                }
+                .mic-button.recording {
+                    background: linear-gradient(135deg, #ff0055 0%, #ff6b9d 100%);
+                    animation: pulse 1.5s ease-in-out infinite;
+                }
+                @keyframes pulse {
+                    0%, 100% { box-shadow: 0 0 15px rgba(255, 0, 85, 0.6); }
+                    50% { box-shadow: 0 0 35px rgba(255, 0, 85, 0.9); }
+                }
+                </style>
             """, height=0)
             
             user_input = st.text_input("Type or 🎤 speak...", key="ci", label_visibility="collapsed")
@@ -3052,16 +3054,20 @@ def render_chatbot():
             
             with c1:
                 if st.button("📤 Send", use_container_width=True):
-                    if user_input.strip():
-                        st.session_state.chat_history.append({"role": "user", "content": user_input})
-                        response = generate_bot_response(user_input)
-                        st.session_state.chat_history.append({"role": "bot", "content": response})
-                        
-                        # Speak the response if it was a voice input
-                        speak_text(response)
-                        
-                        st.rerun()
-            
+                  if user_input.strip():
+                    # ✅ SPEECH FIX: Just use input as-is (no marker to remove)
+                    clean_input = user_input.strip()
+
+                    # Add user message and get bot response
+                    st.session_state.chat_history.append({"role": "user", "content": clean_input})
+                    response = generate_bot_response(clean_input)
+                    st.session_state.chat_history.append({"role": "bot", "content": response})
+
+                    # ✅ Enable speech for ALL messages (voice AND text)
+                    st.session_state.should_speak_response = True
+
+                    # Rerun to update UI and trigger speech
+                    st.rerun()           
             with c2:
                 if st.button("🗑️ Clear", use_container_width=True):
                     st.session_state.chat_history = []
@@ -3265,11 +3271,10 @@ Remember: Stay focused on RideWise features only!"""
         return f"🤖 I'm having trouble connecting right now. Please try again! (Error: {str(e)[:50]}...)"
 
 def speak_text(text):
-    """
-    Text-to-speech with TRIPLE-CHECK flag verification
-    """
-    clean_text = text.replace('🤖', '').replace('📊', '').replace('🗺️', '').replace('🚴', '').replace('⭐', '').replace('*', '').replace('`', '').replace('\n', ' ')
-    clean_text = clean_text.replace('\\', '\\\\').replace('"', '\\"').replace("'", "\\'").replace('\n', ' ')
+    """Text-to-speech - simplified without flag checking"""
+    clean_text = text.replace("'", "").replace('"', '').replace('*', '').replace('`', '')
+    clean_text = clean_text.replace('<', '').replace('>', '').replace('\n', ' ').replace('  ', ' ')
+    clean_text = clean_text[:500]  # Limit length
 
     speak_js = f"""
     <script>
@@ -3277,36 +3282,14 @@ def speak_text(text):
         const parentWin = window.parent || window;
         const parentDoc = parentWin.document;
 
-        // FIX: TRIPLE-CHECK all three flag sources
-        const sessionFlag = parentWin.sessionStorage.getItem('lastInputWasVoice') === 'true';
-        const localFlag = parentWin.localStorage.getItem('voiceInputActive') === 'true';
-        const windowFlag = parentWin.window.VOICE_INPUT_ACTIVE === true;
-        
-        const wasVoice = sessionFlag || localFlag || windowFlag;
-        
-        console.log('[SPEECH] Flag check:', {{
-            session: sessionFlag,
-            local: localFlag,
-            window: windowFlag,
-            final: wasVoice
-        }});
-        
-        if (!wasVoice) {{
-            console.log('[SPEECH] ❌ No voice flags detected - skipping speech');
-            return;
-        }}
-
-        console.log('[SPEECH] ✅ Voice input confirmed - WILL SPEAK');
+        console.log('[SPEECH] Starting speech synthesis');
 
         if (!('speechSynthesis' in parentWin)) {{
             console.error('[SPEECH] Speech synthesis not supported');
-            // Clear all flags
-            parentWin.sessionStorage.removeItem('lastInputWasVoice');
-            parentWin.localStorage.removeItem('voiceInputActive');
-            parentWin.window.VOICE_INPUT_ACTIVE = false;
             return;
         }}
 
+        // Cancel any ongoing speech
         parentWin.speechSynthesis.cancel();
         parentDoc.querySelectorAll('.speaking-indicator').forEach(el => el.remove());
 
@@ -3315,94 +3298,75 @@ def speak_text(text):
             if (voices.length > 0) {{
                 callback(voices);
             }} else {{
-                console.log('[SPEECH] Waiting for voices...');
                 parentWin.speechSynthesis.addEventListener('voiceschanged', function() {{
                     callback(parentWin.speechSynthesis.getVoices());
                 }}, {{ once: true }});
-                
-                const dummy = new parentWin.SpeechSynthesisUtterance('');
+
+                const dummy = new parentWin.SpeechSynthesisUtterance();
                 parentWin.speechSynthesis.speak(dummy);
                 parentWin.speechSynthesis.cancel();
             }}
         }}
 
-        function getLockedVoice(voices) {{
-            const cachedName = parentWin.sessionStorage.getItem('ridewise_voice_name');
-            
-            if (cachedName) {{
-                const cached = voices.find(v => v.name === cachedName);
-                if (cached) {{
-                    console.log('[SPEECH] ✅ Using LOCKED voice:', cachedName);
-                    return cached;
-                }}
-            }}
-            
+        function getVoice(voices) {{
             let voice = voices.find(v => v.lang === 'en-US' && v.name.toLowerCase().includes('google'));
             if (!voice) voice = voices.find(v => v.lang === 'en-US' && v.name.toLowerCase().includes('microsoft'));
-            if (!voice) voice = voices.find(v => v.lang === 'en-US' && (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('samantha')));
             if (!voice) voice = voices.find(v => v.lang === 'en-US');
             if (!voice && voices.length > 0) voice = voices[0];
-            
-            if (voice) {{
-                parentWin.sessionStorage.setItem('ridewise_voice_name', voice.name);
-                console.log('[SPEECH] 🔒 LOCKED to voice:', voice.name);
-            }}
-            
             return voice;
         }}
 
         ensureVoicesLoaded(function(voices) {{
-            const voice = getLockedVoice(voices);
-            
+            const voice = getVoice(voices);
             const utterance = new parentWin.SpeechSynthesisUtterance("{clean_text}");
             utterance.rate = 0.95;
             utterance.pitch = 1.0;
             utterance.volume = 1.0;
-            
+
             if (voice) {{
                 utterance.voice = voice;
-                console.log('[SPEECH] 🎤 Speaking with:', voice.name);
+                console.log('[SPEECH] Using voice:', voice.name);
             }}
-            
+
+            // Show speaking indicator
             const indicator = parentDoc.createElement('div');
             indicator.className = 'speaking-indicator';
             indicator.innerHTML = `
-                <div style="position: fixed; bottom: 100px; right: 30px; background: linear-gradient(135deg, #00ffff 0%, #8a2be2 100%);
-                    color: white; padding: 14px 22px; border-radius: 50px; box-shadow: 0 0 30px rgba(0, 255, 255, 0.7);
-                    z-index: 10000; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600;">
+                <div style="position: fixed; bottom: 100px; right: 30px; 
+                     background: linear-gradient(135deg, #00ffff 0%, #8a2be2 100%); 
+                     color: white; padding: 14px 22px; border-radius: 50px; 
+                     box-shadow: 0 0 30px rgba(0, 255, 255, 0.7); z-index: 10000; 
+                     display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600;">
                     <span style="font-size: 22px; animation: speakPulse 1.4s ease-in-out infinite;">🔊</span>
                     <span>Speaking... (ESC to stop)</span>
                 </div>
                 <style>
-                    @keyframes speakPulse {{ 0%, 100% {{ transform: scale(1); }} 50% {{ transform: scale(1.25); }} }}
+                    @keyframes speakPulse {{
+                        0%, 100% {{ transform: scale(1); }}
+                        50% {{ transform: scale(1.25); }}
+                    }}
                 </style>
             `;
             parentDoc.body.appendChild(indicator);
 
             utterance.onend = function() {{
-                console.log('[SPEECH] ✅ Speech completed - clearing flags');
+                console.log('[SPEECH] Speech completed');
                 indicator.remove();
-                parentWin.sessionStorage.removeItem('lastInputWasVoice');
-                parentWin.localStorage.removeItem('voiceInputActive');
-                parentWin.window.VOICE_INPUT_ACTIVE = false;
             }};
 
             utterance.onerror = function(e) {{
-                console.error('[SPEECH] ❌ Error:', e);
+                console.error('[SPEECH] Error:', e);
                 indicator.remove();
-                parentWin.sessionStorage.removeItem('lastInputWasVoice');
-                parentWin.localStorage.removeItem('voiceInputActive');
-                parentWin.window.VOICE_INPUT_ACTIVE = false;
             }};
 
-            console.log('[SPEECH] 🎯 STARTING SPEECH NOW');
+            console.log('[SPEECH] Starting speech now');
             parentWin.speechSynthesis.speak(utterance);
         }});
     }})();
     </script>
     """
-
     components.html(speak_js, height=0)
+
 
 def render_navbar():
     # Create 3 columns: Logo | Navigation | User + Theme Toggle
@@ -4369,23 +4333,6 @@ def map_page():
         st.metric("📊 Average Availability", f"{avg_availability:.1f}%")
     with col4:
         st.metric("⚡ System Status", "Operational", "✅")
-    
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Station Details Table
-    st.markdown('<div class="dashboard-card">', unsafe_allow_html=True)
-    st.markdown('<h3 class="section-title">📋 Station Details</h3>', unsafe_allow_html=True)
-    
-    # Create a styled dataframe
-    display_df = filtered_data[['station', 'bikes_available', 'capacity']].copy()
-    display_df['availability_%'] = (display_df['bikes_available'] / display_df['capacity'] * 100).round(1)
-    display_df = display_df.sort_values('bikes_available', ascending=False)
-    
-    st.dataframe(
-        display_df,
-        use_container_width=True,
-        hide_index=True
-    )
     
     st.markdown('</div>', unsafe_allow_html=True)
     
