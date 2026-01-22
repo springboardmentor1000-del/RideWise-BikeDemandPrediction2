@@ -16,9 +16,6 @@ import pickle
 import os
 from openai import OpenAI
 
-import streamlit as st
-from openai import OpenAI
-
 # NVIDIA API Configuration - Using Streamlit Secrets
 try:
     NVIDIA_API_KEY = st.secrets["NVIDIA_API_KEY"]
@@ -26,12 +23,6 @@ try:
 except KeyError:
     st.error("⚠️ API credentials not found. Please configure secrets in Streamlit Cloud.")
     st.stop()
-
-# Initialize NVIDIA client
-nvidia_client = OpenAI(
-    base_url=NVIDIA_BASE_URL,
-    api_key=NVIDIA_API_KEY
-)
 
 # Initialize NVIDIA client
 nvidia_client = OpenAI(
@@ -2900,7 +2891,7 @@ def render_chatbot():
                 </script>
             """, height=0)
 
-            # CRITICAL FIX: Enhanced microphone with persistence
+            # CRITICAL FIX: Enhanced microphone with GUARANTEED persistence
             components.html("""
                 <script>
                 (function() {
@@ -2939,45 +2930,54 @@ def render_chatbot():
                             };
                             
                             recognition.onresult = function(event) {
-    const transcript = event.results[0][0].transcript;
+                                const transcript = event.results[0][0].transcript;
 
-    // CRITICAL: Set voice flag IMMEDIATELY and PERSIST
-    sessionStorage.setItem('lastInputWasVoice', 'true');
-    
-    // DOUBLE-CHECK: Verify flag was set
-    const flagCheck = sessionStorage.getItem('lastInputWasVoice');
-    console.log('[MIC] Voice flag SET:', flagCheck, '- transcript:', transcript);
+                                // FIX 1: Set flag IMMEDIATELY and log it
+                                parent.sessionStorage.setItem('lastInputWasVoice', 'true');
+                                console.log('[MIC] ✅ Voice flag SET:', parent.sessionStorage.getItem('lastInputWasVoice'));
 
-    // CRITICAL FIX: Longer delay to ensure flag persists before Send click
-    setTimeout(function() {
-        const inputs = parent.document.querySelectorAll('[data-testid="stSidebar"] input[type="text"]');
-        if (inputs.length > 0) {
-            const input = inputs[inputs.length - 1];
-            const nativeSetter = Object.getOwnPropertyDescriptor(
-                window.HTMLInputElement.prototype, 'value'
-            ).set;
-            nativeSetter.call(input, transcript);
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-            input.focus();
+                                // FIX 2: Add flag to localStorage as backup
+                                parent.localStorage.setItem('voiceInputActive', 'true');
+                                
+                                // FIX 3: Set window property as third backup
+                                parent.window.VOICE_INPUT_ACTIVE = true;
 
-            // FIX: Increased delay from 200ms to 400ms to ensure flag persistence
-            setTimeout(function() {
-                // RE-VERIFY flag before clicking Send
-                const flagBeforeSend = sessionStorage.getItem('lastInputWasVoice');
-                console.log('[MIC] Flag status before Send click:', flagBeforeSend);
-                
-                const sendBtn = parent.document.querySelector('button[kind="primary"]') ||
-                               Array.from(parent.document.querySelectorAll('button'))
-                                   .find(b => b.textContent.includes('Send') || b.textContent.includes('📤'));
-                if (sendBtn) {
-                    console.log('[MIC] Auto-clicking send button');
-                    sendBtn.click();
-                }
-            }, 400);  // INCREASED from 200ms to 400ms
-        }
-    }, 150);  // INCREASED from 100ms to 150ms
-};
+                                setTimeout(function() {
+                                    const inputs = parent.document.querySelectorAll('[data-testid="stSidebar"] input[type="text"]');
+                                    if (inputs.length > 0) {
+                                        const input = inputs[inputs.length - 1];
+                                        const nativeSetter = Object.getOwnPropertyDescriptor(
+                                            window.HTMLInputElement.prototype, 'value'
+                                        ).set;
+                                        nativeSetter.call(input, transcript);
+                                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                                        input.focus();
+
+                                        // FIX 4: Increased delay BEFORE clicking Send
+                                        setTimeout(function() {
+                                            // FIX 5: RE-SET flag right before Send (in case it got cleared)
+                                            parent.sessionStorage.setItem('lastInputWasVoice', 'true');
+                                            parent.localStorage.setItem('voiceInputActive', 'true');
+                                            parent.window.VOICE_INPUT_ACTIVE = true;
+                                            
+                                            console.log('[MIC] 🔄 Re-confirmed flags before Send');
+                                            
+                                            const sendBtn = parent.document.querySelector('button[kind="primary"]') ||
+                                                           Array.from(parent.document.querySelectorAll('button'))
+                                                               .find(b => b.textContent.includes('Send') || b.textContent.includes('📤'));
+                                            if (sendBtn) {
+                                                console.log('[MIC] 🎯 Clicking Send with flags:', {
+                                                    session: parent.sessionStorage.getItem('lastInputWasVoice'),
+                                                    local: parent.localStorage.getItem('voiceInputActive'),
+                                                    window: parent.window.VOICE_INPUT_ACTIVE
+                                                });
+                                                sendBtn.click();
+                                            }
+                                        }, 500);  // INCREASED from 400ms to 500ms
+                                    }
+                                }, 200);  // INCREASED from 150ms to 200ms
+                            };
 
                             recognition.onend = function() {
                                 isRecording = false;
@@ -2986,7 +2986,7 @@ def render_chatbot():
                             };
                             
                             recognition.onerror = function(event) {
-                                console.error('Speech error:', event.error);
+                                console.error('[MIC] ❌ Speech error:', event.error);
                                 isRecording = false;
                                 btn.classList.remove('recording');
                                 btn.innerHTML = '🎤';
@@ -2995,7 +2995,7 @@ def render_chatbot():
                             try {
                                 recognition.start();
                             } catch (err) {
-                                console.error('Start error:', err);
+                                console.error('[MIC] ❌ Start error:', err);
                             }
                         };
                         return btn;
@@ -3015,12 +3015,10 @@ def render_chatbot():
                         return false;
                     }
                     
-                    // Progressive retries
                     [100, 300, 500, 800, 1200, 1800, 2500].forEach(delay => {
                         setTimeout(attachMicButton, delay);
                     });
                     
-                    // MutationObserver for persistence
                     function setupObserver() {
                         const sidebar = parent.document.querySelector('[data-testid="stSidebar"]');
                         if (sidebar) {
@@ -3035,7 +3033,6 @@ def render_chatbot():
                     }
                     setupObserver();
                     
-                    // Fallback check every 600ms
                     setInterval(function() {
                         const inputs = parent.document.querySelectorAll('[data-testid="stSidebar"] input[type="text"]');
                         if (inputs.length > 0) {
@@ -3269,11 +3266,9 @@ Remember: Stay focused on RideWise features only!"""
 
 def speak_text(text):
     """
-    Text-to-speech with CONSISTENT voice locked on first use.
+    Text-to-speech with TRIPLE-CHECK flag verification
     """
-    # Clean text for safe JS embedding
     clean_text = text.replace('🤖', '').replace('📊', '').replace('🗺️', '').replace('🚴', '').replace('⭐', '').replace('*', '').replace('`', '').replace('\n', ' ')
-    # Escape for JavaScript
     clean_text = clean_text.replace('\\', '\\\\').replace('"', '\\"').replace("'", "\\'").replace('\n', ' ')
 
     speak_js = f"""
@@ -3282,48 +3277,58 @@ def speak_text(text):
         const parentWin = window.parent || window;
         const parentDoc = parentWin.document;
 
-        // Only speak if mic was used
-        const wasVoice = parentWin.sessionStorage.getItem('lastInputWasVoice') === 'true';
+        // FIX: TRIPLE-CHECK all three flag sources
+        const sessionFlag = parentWin.sessionStorage.getItem('lastInputWasVoice') === 'true';
+        const localFlag = parentWin.localStorage.getItem('voiceInputActive') === 'true';
+        const windowFlag = parentWin.window.VOICE_INPUT_ACTIVE === true;
+        
+        const wasVoice = sessionFlag || localFlag || windowFlag;
+        
+        console.log('[SPEECH] Flag check:', {{
+            session: sessionFlag,
+            local: localFlag,
+            window: windowFlag,
+            final: wasVoice
+        }});
+        
         if (!wasVoice) {{
-            console.log('[SPEECH] Skipping - not a voice input');
+            console.log('[SPEECH] ❌ No voice flags detected - skipping speech');
             return;
         }}
 
-        console.log('[SPEECH] Voice input detected - speaking response');
+        console.log('[SPEECH] ✅ Voice input confirmed - WILL SPEAK');
 
         if (!('speechSynthesis' in parentWin)) {{
             console.error('[SPEECH] Speech synthesis not supported');
+            // Clear all flags
             parentWin.sessionStorage.removeItem('lastInputWasVoice');
+            parentWin.localStorage.removeItem('voiceInputActive');
+            parentWin.window.VOICE_INPUT_ACTIVE = false;
             return;
         }}
 
-        // Stop any existing speech
         parentWin.speechSynthesis.cancel();
         parentDoc.querySelectorAll('.speaking-indicator').forEach(el => el.remove());
 
-        // FIX: FORCE load voices first, THEN lock to one
         function ensureVoicesLoaded(callback) {{
             const voices = parentWin.speechSynthesis.getVoices();
             if (voices.length > 0) {{
                 callback(voices);
             }} else {{
-                console.log('[SPEECH] Waiting for voices to load...');
+                console.log('[SPEECH] Waiting for voices...');
                 parentWin.speechSynthesis.addEventListener('voiceschanged', function() {{
                     callback(parentWin.speechSynthesis.getVoices());
                 }}, {{ once: true }});
                 
-                // Trigger voice loading
                 const dummy = new parentWin.SpeechSynthesisUtterance('');
                 parentWin.speechSynthesis.speak(dummy);
                 parentWin.speechSynthesis.cancel();
             }}
         }}
 
-        // FIX: Get and LOCK to consistent voice
         function getLockedVoice(voices) {{
             const cachedName = parentWin.sessionStorage.getItem('ridewise_voice_name');
             
-            // Try to use cached voice first
             if (cachedName) {{
                 const cached = voices.find(v => v.name === cachedName);
                 if (cached) {{
@@ -3332,7 +3337,6 @@ def speak_text(text):
                 }}
             }}
             
-            // Select and LOCK voice (priority order)
             let voice = voices.find(v => v.lang === 'en-US' && v.name.toLowerCase().includes('google'));
             if (!voice) voice = voices.find(v => v.lang === 'en-US' && v.name.toLowerCase().includes('microsoft'));
             if (!voice) voice = voices.find(v => v.lang === 'en-US' && (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('samantha')));
@@ -3341,13 +3345,12 @@ def speak_text(text):
             
             if (voice) {{
                 parentWin.sessionStorage.setItem('ridewise_voice_name', voice.name);
-                console.log('[SPEECH] 🔒 LOCKED to voice:', voice.name, '(will use this EVERY time)');
+                console.log('[SPEECH] 🔒 LOCKED to voice:', voice.name);
             }}
             
             return voice;
         }}
 
-        // Wait for voices, then speak
         ensureVoicesLoaded(function(voices) {{
             const voice = getLockedVoice(voices);
             
@@ -3358,7 +3361,7 @@ def speak_text(text):
             
             if (voice) {{
                 utterance.voice = voice;
-                console.log('[SPEECH] Speaking with:', voice.name);
+                console.log('[SPEECH] 🎤 Speaking with:', voice.name);
             }}
             
             const indicator = parentDoc.createElement('div');
@@ -3377,18 +3380,22 @@ def speak_text(text):
             parentDoc.body.appendChild(indicator);
 
             utterance.onend = function() {{
-                console.log('[SPEECH] ✅ Speech completed');
+                console.log('[SPEECH] ✅ Speech completed - clearing flags');
                 indicator.remove();
                 parentWin.sessionStorage.removeItem('lastInputWasVoice');
+                parentWin.localStorage.removeItem('voiceInputActive');
+                parentWin.window.VOICE_INPUT_ACTIVE = false;
             }};
 
             utterance.onerror = function(e) {{
                 console.error('[SPEECH] ❌ Error:', e);
                 indicator.remove();
                 parentWin.sessionStorage.removeItem('lastInputWasVoice');
+                parentWin.localStorage.removeItem('voiceInputActive');
+                parentWin.window.VOICE_INPUT_ACTIVE = false;
             }};
 
-            console.log('[SPEECH] 🎤 Starting speech...');
+            console.log('[SPEECH] 🎯 STARTING SPEECH NOW');
             parentWin.speechSynthesis.speak(utterance);
         }});
     }})();
