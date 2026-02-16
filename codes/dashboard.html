@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RideWise | Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+*{
+    box-sizing:border-box;
+    font-family:'Inter',sans-serif;
+}
+
+/* ===== THEME VARIABLES ===== */
+:root{
+    --bg-main:linear-gradient(135deg,#f8fafc,#eef2ff);
+    --card-bg:#ffffff;
+
+    --stat1:linear-gradient(135deg,#6366f1,#818cf8);
+    --stat2:linear-gradient(135deg,#22c55e,#4ade80);
+    --stat3:linear-gradient(135deg,#f43f5e,#fb7185);
+
+    --graph-bg:linear-gradient(135deg,#ffffff,#f1f5f9);
+    --btn:#6366f1;
+}
+
+/* VIBRANT PREVIEW */
+body.vibrant{
+    --bg-main:linear-gradient(135deg,#ecfeff,#fdf4ff);
+    --stat1:linear-gradient(135deg,#ec4899,#f472b6);
+    --stat2:linear-gradient(135deg,#14b8a6,#5eead4);
+    --stat3:linear-gradient(135deg,#8b5cf6,#c4b5fd);
+    --graph-bg:linear-gradient(135deg,#ffffff,#fdf2f8);
+    --btn:#ec4899;
+}
+
+body{
+    margin:0;
+    background:var(--bg-main);
+    color:#0f172a;
+    transition:.4s;
+}
+
+/* ===== LAYOUT ===== */
+.page{ display:flex; min-height:100vh; }
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+    width:240px;
+    background:linear-gradient(180deg,#020617,#0f172a);
+    color:white;
+    padding:28px 18px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+.sidebar h4{
+    font-size:13px;
+    color:#94a3b8;
+    text-transform:uppercase;
+}
+
+.sidebar a{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:14px 16px;
+    border-radius:14px;
+    text-decoration:none;
+    color:#e5e7eb;
+    transition:.3s;
+}
+
+.sidebar a:hover{ background:#1e293b; }
+.sidebar a.active{
+    background:linear-gradient(135deg,#facc15,#f97316);
+    color:#020617;
+    font-weight:700;
+}
+.sidebar .logout{ margin-top:auto; background:#7f1d1d; }
+
+/* ===== MAIN ===== */
+.main{ flex:1; padding:50px; }
+
+.card{
+    background:var(--card-bg);
+    padding:40px;
+    border-radius:26px;
+    box-shadow:0 30px 70px rgba(0,0,0,.15);
+}
+
+/* HEADER */
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:40px;
+}
+
+.header h2{
+    font-size:28px;
+    font-weight:800;
+    background:linear-gradient(135deg,#2563eb,#22c55e);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+
+.user-id{
+    padding:10px 18px;
+    border-radius:14px;
+    background:linear-gradient(135deg,#22c55e,#16a34a);
+    color:white;
+    font-weight:700;
+}
+
+/* THEME BUTTONS */
+.theme-btn{
+    margin-left:10px;
+    padding:8px 14px;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    background:var(--btn);
+    color:white;
+    font-weight:600;
+}
+
+/* ===== STATS ===== */
+.stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:26px;
+    margin-bottom:45px;
+}
+
+.stat-box{
+    padding:30px;
+    border-radius:22px;
+    color:white;
+    text-align:center;
+    box-shadow:0 18px 45px rgba(0,0,0,.2);
+    transition:.3s;
+}
+
+.stat-box:nth-child(1){ background:var(--stat1); }
+.stat-box:nth-child(2){ background:var(--stat2); }
+.stat-box:nth-child(3){ background:var(--stat3); }
+
+.stat-box h2{ font-size:40px; margin:0; }
+.stat-box p{ margin-top:10px; }
+
+.stat-box:hover{
+    transform:translateY(-6px) scale(1.03);
+}
+
+/* ===== GRAPHS ===== */
+.graphs{
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:30px;
+}
+
+.graph-card{
+    background:var(--graph-bg);
+    padding:28px;
+    border-radius:22px;
+    box-shadow:0 15px 40px rgba(0,0,0,.12);
+}
+
+.graph-card h4{
+    margin-bottom:18px;
+}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+    .graphs{ grid-template-columns:1fr; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="page">
+
+<aside class="sidebar">
+    <h4>Navigation</h4>
+    <a class="active"><i class="fa fa-house"></i> Home</a>
+    <a href="/predict"><i class="fa fa-chart-line"></i> Predict</a>
+    <a href="/chatbot"><i class="fa fa-robot"></i> Chatbot</a>
+    <a href="/review"><i class="fa fa-star"></i> Review</a>
+    <a href="/book"><i class="fa fa-bicycle"></i> Book Ride</a>
+    <a href="/overall_ride_analytics"><i class="fa fa-chart-pie"></i> Overall Analytics</a>
+    <a href="/logout" class="logout"><i class="fa fa-right-from-bracket"></i> Logout</a>
+</aside>
+
+<div class="main">
+<div class="card">
+
+<div class="header">
+    <h2>My Ride Analytics</h2>
+    <div>
+        <span class="user-id">User: {{ username }}</span>
+        <button class="theme-btn" onclick="setTheme('soft')">Soft</button>
+        <button class="theme-btn" onclick="setTheme('vibrant')">Vibrant</button>
+    </div>
+</div>
+
+<div class="stats">
+    <div class="stat-box"><h2>0</h2><p>Total Rides</p></div>
+    <div class="stat-box"><h2>0</h2><p>Completed</p></div>
+    <div class="stat-box"><h2>0</h2><p>Cancelled</p></div>
+</div>
+
+<div class="graphs">
+    <div class="graph-card">
+        <h4>Rides Per Day</h4>
+        <canvas id="ridesChart"></canvas>
+    </div>
+    <div class="graph-card">
+        <h4>Ride Status</h4>
+        <canvas id="statusChart"></canvas>
+    </div>
+</div>
+
+</div>
+</div>
+</div>
+
+<script>
+function setTheme(type){
+    document.body.className = type === 'vibrant' ? 'vibrant' : '';
+}
+
+async function loadDashboardData(){
+    const res = await fetch('/dashboard_data');
+    const d = await res.json();
+
+    document.querySelectorAll('.stat-box h2')[0].textContent = d.total||0;
+    document.querySelectorAll('.stat-box h2')[1].textContent = d.completed||0;
+    document.querySelectorAll('.stat-box h2')[2].textContent = d.cancelled||0;
+
+    new Chart(ridesChart,{
+        type:'bar',
+        data:{
+            labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+            datasets:[{
+                data:d.rides_per_day||[0,0,0,0,0,0,0],
+                backgroundColor:'#6366f1',
+                borderRadius:12
+            }]
+        },
+        options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+    });
+
+    new Chart(statusChart,{
+        type:'doughnut',
+        data:{
+            labels:['Completed','Cancelled'],
+            datasets:[{
+                data:[d.completed||0,d.cancelled||0],
+                backgroundColor:['#22c55e','#f43f5e']
+            }]
+        },
+        options:{ cutout:'70%' }
+    });
+}
+window.onload = loadDashboardData;
+</script>
+
+</body>
+</html>

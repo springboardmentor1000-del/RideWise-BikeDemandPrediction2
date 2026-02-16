@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RideWise | Profile</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+    --nav:#0f172a;
+    --bg:#f1f5f9;
+    --card:#ffffff;
+    --text:#0f172a;
+    --muted:#64748b;
+    --accent:#2563eb;
+    --danger:#ef4444;
+}
+
+*{ box-sizing:border-box; font-family:'Inter',sans-serif; }
+
+body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+}
+
+nav{
+    background:var(--nav);
+    padding:16px 60px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.logo{
+    color:white;
+    font-size:22px;
+    font-weight:700;
+}
+
+.nav-right{
+    display:flex;
+    align-items:center;
+    gap:24px;
+}
+
+.nav-right a{
+    color:#cbd5f5;
+    text-decoration:none;
+    font-size:14px;
+}
+
+.profile-wrapper{ position:relative; }
+
+.profile-btn{
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    background:linear-gradient(135deg,#2563eb,#60a5fa);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+    cursor:pointer;
+}
+
+.profile-dropdown{
+    position:absolute;
+    top:54px;
+    right:0;
+    width:230px;
+    background:white;
+    border-radius:14px;
+    padding:16px;
+    display:none;
+}
+
+.profile-dropdown a{
+    display:block;
+    padding:10px;
+    text-decoration:none;
+}
+
+.main{ padding:60px; }
+
+.card{
+    background:white;
+    padding:30px;
+    border-radius:16px;
+    max-width:600px;
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+    <div class="logo">🚲 RideWise</div>
+
+    <div class="nav-right">
+        <a href="/">Home</a>
+        <a href="/predict">Predict</a>
+
+        <div class="profile-wrapper">
+            <div class="profile-btn" onclick="toggleProfile()">👤</div>
+
+            <div class="profile-dropdown" id="profileMenu">
+                <h4>{{ username }}</h4>
+                <p>RideWise User</p>
+                <a href="/">🏠 Back to Home</a>
+                <a href="/logout">🚪 Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="main">
+    <div class="card">
+        <h2>Profile</h2>
+        <p>Welcome {{ username }}</p>
+    </div>
+</div>
+
+<script>
+function toggleProfile(){
+    const menu=document.getElementById("profileMenu");
+    menu.style.display = menu.style.display==="block" ? "none" : "block";
+}
+</script>
+
+</body>
+</html>

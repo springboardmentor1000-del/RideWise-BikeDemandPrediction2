@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sign Up | RideWise</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+body {
+    background: linear-gradient(180deg, #0f172a, #020617);
+    font-family: 'Inter', sans-serif;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.auth-container {
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(14px);
+    padding: 42px;
+    border-radius: 22px;
+    width: 380px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.45);
+}
+
+h2 {
+    margin-bottom: 26px;
+    font-weight: 700;
+}
+
+p.subtitle {
+    font-size: 14px;
+    color: #c7d2fe;
+    margin-bottom: 24px;
+}
+
+input {
+    width: 100%;
+    padding: 13px;
+    margin: 10px 0;
+    border-radius: 12px;
+    border: none;
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    font-size: 15px;
+    outline: none;
+}
+
+input::placeholder {
+    color: #cbd5f5;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 18px;
+    background: linear-gradient(135deg, #4f46e5, #818cf8);
+    border: none;
+    border-radius: 14px;
+    color: white;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(79,70,229,0.6);
+}
+
+a {
+    color: #a5b4fc;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.flash {
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.flash.success { background-color: #16a34a33; color: #16a34a; }
+.flash.danger { background-color: #dc262633; color: #dc2626; }
+</style>
+</head>
+
+<body>
+
+<div class="auth-container">
+    <h2>Create RideWise Account 🚲</h2>
+    <p class="subtitle">Join RideWise and predict smarter rides</p>
+
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <input type="text" name="username" placeholder="Username" required>
+        <!-- Email is optional; Flask currently ignores it -->
+        <input type="password" name="password" placeholder="Password" required>
+        <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+
+        <button type="submit">Create Account</button>
+    </form>
+
+    <p style="margin-top:18px;">
+        Already have an account? <a href="/login">Login</a>
+    </p>
+</div>
+
+</body>
+</html>

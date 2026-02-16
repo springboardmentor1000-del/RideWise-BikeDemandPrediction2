@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RideWise | Book Ride</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+*{box-sizing:border-box;font-family:'Inter',sans-serif}
+body{
+  margin:0;
+  background:linear-gradient(135deg,#eef2ff,#f8fafc);
+  color:#0f172a;
+}
+nav{
+  background:#020617;
+  color:white;
+  padding:15px 50px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+nav ul{
+  list-style:none;
+  display:flex;
+  gap:25px;
+}
+nav a{
+  color:#cbd5f5;
+  text-decoration:none;
+}
+nav a.active{color:#60a5fa}
+
+.hero{
+  display:flex;
+  justify-content:center;
+  padding:40px;
+}
+.dashboard{
+  display:flex;
+  gap:30px;
+  width:100%;
+  max-width:1400px;
+}
+.booking-card{
+  background:white;
+  padding:40px;
+  border-radius:22px;
+  box-shadow:0 20px 45px rgba(0,0,0,0.15);
+  flex:1;
+}
+.analytics-card{
+  background:white;
+  padding:30px;
+  border-radius:22px;
+  box-shadow:0 20px 45px rgba(0,0,0,0.15);
+  flex:1;
+  display:none; /* only show after booking */
+}
+label{
+  font-weight:600;
+  margin-top:18px;
+  display:block;
+}
+.input-group{
+  position:relative;
+  margin-top:8px;
+}
+.input-group i{
+  position:absolute;
+  top:50%;
+  left:14px;
+  transform:translateY(-50%);
+  color:#2563eb;
+}
+input, select{
+  width:100%;
+  padding:13px 13px 13px 42px;
+  border-radius:10px;
+  border:1px solid #d0d7e2;
+  background:white;
+  font-size:14px;
+}
+button{
+  width:100%;
+  margin-top:25px;
+  padding:16px;
+  border:none;
+  border-radius:14px;
+  font-size:1.05rem;
+  font-weight:600;
+  color:white;
+  background:linear-gradient(135deg,#2563eb,#60a5fa);
+  cursor:pointer;
+}
+.cancel-btn{
+  background:#ef4444;
+}
+.success-box{
+  margin-top:20px;
+  padding:15px;
+  background:#ecfeff;
+  border-left:6px solid #06b6d4;
+  display:none;
+}
+#rideStats{
+  margin-top:15px;
+  padding:15px;
+  background:#f0f9ff;
+  border-left:6px solid #2563eb;
+  display:none;
+}
+#map{
+  height:300px;
+  margin-top:25px;
+  border-radius:16px;
+}
+.policy{
+  margin-top:18px;
+  font-size:14px;
+  color:#475569;
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+  <div class="logo">🚲 RideWise</div>
+  <ul>
+    <li><a href="/">Home</a></li>
+    <li><a class="active" href="/book">Book Ride</a></li>
+    <li><a href="/dashboard">Dashboard</a></li>
+    <li><a href="/overall_ride_analytics">overall ride analytics</a></li>
+
+  </ul>
+</nav>
+
+<section class="hero">
+<div class="dashboard">
+
+<!-- LEFT: Booking Form + Map + Stats -->
+<div class="booking-card">
+
+<h2>🚀 Book Your Ride</h2>
+
+<label>Pickup Location</label>
+<div class="input-group">
+  <i class="fas fa-location-dot"></i>
+  <input id="pickup" placeholder="Enter pickup location">
+</div>
+
+<label>Drop Location</label>
+<div class="input-group">
+  <i class="fas fa-flag-checkered"></i>
+  <input id="drop" placeholder="Enter drop location">
+</div>
+
+<label>Bike Type</label>
+<div class="input-group">
+  <i class="fas fa-motorcycle"></i>
+  <select id="bikeType">
+    <option value="">Select bike type</option>
+    <option value="Standard">Standard</option>
+    <option value="Scooty">Scooty</option>
+    <option value="Sports">Sports</option>
+  </select>
+</div>
+
+<label>Ride Date</label>
+<div class="input-group">
+  <i class="fas fa-calendar"></i>
+  <input type="date" id="rideDate">
+</div>
+
+<label>Ride Time</label>
+<div class="input-group">
+  <i class="fas fa-clock"></i>
+  <input type="time" id="rideTime">
+</div>
+
+<button onclick="confirmBooking()">Confirm Booking</button>
+<button class="cancel-btn" onclick="cancelRide()">Cancel Ride (Within 24 Hours)</button>
+
+<div class="success-box" id="successBox"></div>
+
+<!-- Ride Stats -->
+<div class="success-box" id="rideStats">
+  <b>Ride Details:</b><br>
+  📏 Distance: <span id="distance">-</span><br>
+  ⏱ ETA: <span id="eta">-</span><br>
+  💰 Fare: <span id="fare">-</span><br>
+  📈 Demand: <span id="demand">-</span>
+</div>
+
+<div id="map"></div>
+
+<div class="policy">
+<b>Cancellation Policy:</b><br>
+• Ride can be cancelled within 24 hours of booking<br>
+• Full refund if payment completed<br>
+• No charges if ride not confirmed
+</div>
+
+</div>
+
+<!-- RIGHT: Analytics -->
+<div class="analytics-card" id="analyticsCard">
+  <h2>📊 Ride Analytics</h2>
+  <canvas id="distanceChart" height="200"></canvas>
+  <canvas id="etaTrafficChart" height="200" style="margin-top:20px;"></canvas>
+  <canvas id="fareDistanceChart" height="200" style="margin-top:20px;"></canvas>
+</div>
+
+</div>
+</section>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+let map = L.map('map').setView([12.9716, 77.5946], 12);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+let distanceChart, etaTrafficChart, fareDistanceChart; // Chart.js instances
+function getTimeSlot(time){
+  const h = parseInt(time.split(":")[0]);
+  if(h >= 5 && h < 11) return "Morning";
+  if(h >= 11 && h < 16) return "Midday";
+  if(h >= 16 && h < 21) return "Evening";
+  return "Night";
+}
+
+function confirmBooking(){
+  const pickup = document.getElementById("pickup").value;
+  const drop = document.getElementById("drop").value;
+  const bikeType = document.getElementById("bikeType").value;
+  const rideDate = document.getElementById("rideDate").value;
+  const rideTime = document.getElementById("rideTime").value;
+
+  if(!pickup || !drop || !bikeType || !rideDate || !rideTime){
+    alert("Please fill all booking details");
+    return;
+  }
+
+  // --- Calculate Distance, ETA, Fare, Demand ---
+  const distance = parseFloat((Math.random()*50 + 5).toFixed(1)); // 5-55 km
+  const eta = Math.ceil(distance / 40 * 60); // assuming avg speed 40 km/h
+  const fare = (distance * 12).toFixed(0); // ₹12/km
+  const demandLevels = ["Low","Medium","High"];
+  const demand = demandLevels[Math.floor(Math.random()*3)];
+  const trafficLevels = ["Low","Medium","High"];
+
+  fetch("/confirm-booking",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+    pickup: pickup,
+    drop: drop,
+    bike_type: bikeType.toLowerCase(),
+    ride_date: rideDate,
+    ride_time: rideTime,
+    time_slot: getTimeSlot(rideTime),
+    distance: distance,
+    eta: eta,
+    fare: fare,
+    demand: demand
+})
+  })
+  .then(res=>res.json())
+  .then(data=>{
+    if(data.status==="success"){
+      const box=document.getElementById("successBox");
+      box.style.display="block";
+      box.innerHTML = `
+        ✔ Booking Confirmed<br>
+        <b>Booking ID:</b> ${data.booking_id}<br>
+        <b>Bike Type:</b> ${bikeType}
+      `;
+
+      // Show ride stats
+      const statsBox = document.getElementById("rideStats");
+      statsBox.style.display = "block";
+      document.getElementById("distance").innerText = distance + " km";
+      document.getElementById("eta").innerText = eta + " min";
+      document.getElementById("fare").innerText = "₹" + fare;
+      document.getElementById("demand").innerText = demand;
+
+      // Show analytics card
+      const analyticsCard = document.getElementById("analyticsCard");
+      analyticsCard.style.display = "block";
+
+      // --- Distance vs ETA Chart ---
+      const ctxDist = document.getElementById('distanceChart').getContext('2d');
+      if(distanceChart) distanceChart.destroy();
+      distanceChart = new Chart(ctxDist, {
+        type: 'bar',
+        data: {
+          labels: ['Distance (km)', 'ETA (min)'],
+          datasets: [{ label:'Ride Metrics', data:[distance, eta], backgroundColor:['#2563eb','#60a5fa'] }]
+        },
+        options:{ responsive:true, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } }
+      });
+
+      // --- ETA vs Traffic Chart ---
+      const ctxETA = document.getElementById('etaTrafficChart').getContext('2d');
+      if(etaTrafficChart) etaTrafficChart.destroy();
+      // simulate ETA for all traffic levels
+      const etaTrafficData = trafficLevels.map((t,i)=> eta + (i*5)); // increase ETA with traffic
+      etaTrafficChart = new Chart(ctxETA, {
+        type: 'bar',
+        data: {
+          labels: trafficLevels,
+          datasets:[{ label:'ETA (min)', data:etaTrafficData, backgroundColor:['#4caf50','#ff9800','#f44336'] }]
+        },
+        options:{ responsive:true, plugins:{ title:{ display:true, text:'ETA vs Traffic Conditions' }, legend:{ display:false } },
+                  scales:{ y:{ beginAtZero:true, title:{ display:true, text:'ETA (min)' } },
+                           x:{ title:{ display:true, text:'Traffic Level' } } } }
+      });
+
+      // --- Fare vs Distance Chart ---
+      const ctxFare = document.getElementById('fareDistanceChart').getContext('2d');
+      if(fareDistanceChart) fareDistanceChart.destroy();
+      // simulate fare for distances 5,10,15,20 km
+      const distancesArr = [5,10,15,20];
+      const fareArr = distancesArr.map(d=> d*12);
+      fareDistanceChart = new Chart(ctxFare, {
+        type: 'scatter',
+        data:{ datasets:[{ label:'Fare vs Distance', data: distancesArr.map((d,i)=>({x:d,y:fareArr[i]})), backgroundColor:'rgba(255,99,132,0.7)', borderColor:'rgba(255,99,132,1)', showLine:true }] },
+        options:{ responsive:true, plugins:{ title:{ display:true, text:'Fare vs Distance' }, legend:{ display:false } },
+                  scales:{ x:{ beginAtZero:true, title:{ display:true, text:'Distance (km)' } },
+                           y:{ beginAtZero:true, title:{ display:true, text:'Fare (₹)' } } } }
+      });
+
+      map.setView([12.9716,77.5946],12);
+    }else{
+      alert("Booking failed. Please try again.");
+    }
+  })
+  .catch(()=>{ alert("Server error. Booking not confirmed."); });
+}
+
+function cancelRide(){
+  const bookingId = prompt("Enter Booking ID to cancel");
+  if(!bookingId) return;
+
+  fetch("/cancel-booking",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ booking_id: bookingId })
+  })
+  .then(res=>res.json())
+  .then(data=>{
+    if(data.status==="cancelled"){ alert("Ride cancelled successfully"); }
+    else{ alert("Cancellation not allowed or booking not found"); }
+  });
+}
+</script>
+
+</body>
+</html>
+  

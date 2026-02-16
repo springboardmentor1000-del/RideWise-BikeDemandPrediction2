@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RideWise | Upload File</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Inter',sans-serif;
+}
+
+body{
+  height:100vh;
+  display:flex;
+  background:linear-gradient(135deg,#0f172a,#1e3a8a,#2563eb);
+  color:#0f172a;
+}
+
+/* ---------------- LEFT SIDEBAR ---------------- */
+.sidebar{
+  width:240px;
+  background:rgba(15,23,42,0.9);
+  backdrop-filter:blur(12px);
+  color:#fff;
+  padding:30px 20px;
+  display:flex;
+  flex-direction:column;
+}
+
+.sidebar h1{
+  font-size:22px;
+  font-weight:700;
+  margin-bottom:40px;
+  text-align:center;
+}
+
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:14px 18px;
+  margin-bottom:12px;
+  border-radius:12px;
+  cursor:pointer;
+  transition:0.3s;
+  font-size:15px;
+
+  color:#ffffff;          /* ← ADD THIS */
+  text-decoration:none;   /* ← ADD THIS */
+}
+
+
+.nav-item i{
+  font-size:16px;
+  color:#ffffff;   /* ← ADD THIS */
+}
+
+.nav-item:hover{
+  background:#2563eb;
+}
+
+.logout{
+  margin-top:auto;
+  background:#ef4444;
+}
+
+.logout:hover{
+  background:#dc2626;
+}
+
+/* ---------------- MAIN CONTENT ---------------- */
+.main{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:40px;
+}
+
+/* ---------------- UPLOAD CARD ---------------- */
+.container{
+  width:100%;
+  max-width:700px;
+  background:rgba(255,255,255,0.92);
+  backdrop-filter:blur(10px);
+  padding:45px;
+  border-radius:24px;
+  box-shadow:0 30px 60px rgba(0,0,0,0.25);
+}
+
+.container h2{
+  font-size:26px;
+  margin-bottom:10px;
+}
+
+.container p{
+  color:#475569;
+  margin-bottom:25px;
+}
+
+input[type="file"]{
+  width:100%;
+  padding:14px;
+  border:2px dashed #2563eb;
+  border-radius:14px;
+  background:#f8fafc;
+  cursor:pointer;
+}
+
+button{
+  width:100%;
+  margin-top:18px;
+  background:linear-gradient(135deg,#2563eb,#22c55e);
+  color:#fff;
+  border:none;
+  padding:16px;
+  font-size:16px;
+  border-radius:14px;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 20px rgba(0,0,0,0.2);
+}
+
+pre{
+  background:#020617;
+  color:#e5e7eb;
+  padding:22px;
+  border-radius:16px;
+  margin-top:25px;
+  max-height:260px;
+  overflow:auto;
+  font-size:14px;
+}
+
+/* ---------------- MOBILE ---------------- */
+@media(max-width:900px){
+  body{
+    flex-direction:column;
+  }
+
+  .sidebar{
+    width:100%;
+    flex-direction:row;
+    overflow-x:auto;
+  }
+
+  .sidebar h1{
+    display:none;
+  }
+
+  .nav-item{
+    white-space:nowrap;
+  }
+
+  .logout{
+    margin-top:0;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- LEFT NAVIGATION -->
+<div class="sidebar">
+  <h1>🚲 RideWise</h1>
+
+  <a href="/" class="nav-item">
+    <i class="fa-solid fa-house"></i> Home
+  </a>
+
+  <a href="/dashboard" class="nav-item">
+    <i class="fa-solid fa-chart-line"></i> Dashboard
+  </a>
+
+  <a href="/chatbot" class="nav-item">
+    <i class="fa-solid fa-robot"></i> Chatbot
+  </a>
+
+  <a href="/overall_ride_analytics" class="nav-item">
+    <i class="fa-solid fa-clock-rotate-left"></i> Overall Analytics
+  </a>
+
+  <a href="/review" class="nav-item">
+    <i class="fa-solid fa-rotate"></i> Reviews
+  </a>
+
+  <a href="/logout" class="nav-item logout">
+    <i class="fa-solid fa-right-from-bracket"></i> Logout
+  </a>
+</div>
+
+
+<!-- MAIN CONTENT -->
+<div class="main">
+  <div class="container">
+    <h2>Upload Ride Context File</h2>
+    <p>Upload a file describing weather, time, and ride conditions.</p>
+
+    <input type="file" id="fileInput" accept=".txt,.csv,.md,.json">
+
+    <button onclick="uploadFile()">Extract Features</button>
+
+    <pre id="output">Extracted features will appear here...</pre>
+
+    <button onclick="useForPrediction()">Use for Prediction</button>
+  </div>
+</div>
+
+<script>
+let isLoading = false;
+
+function uploadFile(){
+  if(isLoading) return;
+
+  const file = document.getElementById("fileInput").files[0];
+  if(!file){
+    alert("Please upload a file");
+    return;
+  }
+
+  isLoading = true;
+  document.getElementById("output").textContent =
+    "⏳ Extracting features using Gemini AI...";
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  fetch("/extract-features", {
+    method: "POST",
+    body: formData
+  })
+  .then(async res => {
+    const data = await res.json();
+    if(!res.ok){
+      throw data.error || "Server error";
+    }
+    return data;
+  })
+  .then(data => {
+    localStorage.setItem("ridewise_features", JSON.stringify(data.features));
+    document.getElementById("output").textContent =
+      JSON.stringify(data.features, null, 2);
+  })
+  .catch(err => {
+    alert("Error: " + err);
+    document.getElementById("output").textContent =
+      "❌ Failed to extract features";
+  })
+  .finally(() => {
+    isLoading = false;
+  });
+}
+
+function useForPrediction(){
+  const f = localStorage.getItem("ridewise_features");
+  if(!f){
+    alert("Extract features first");
+    return;
+  }
+
+  const features = JSON.parse(f);
+  const required = ["hour","working_day","weather","temperature","wind_speed"];
+
+  for(const k of required){
+    if(features[k] === undefined || features[k] === null){
+      alert("Incomplete features detected. Please re-upload file.");
+      return;
+    }
+  }
+
+  window.location.href = "/predict";
+}
+</script>
+
+</body>
+</html>

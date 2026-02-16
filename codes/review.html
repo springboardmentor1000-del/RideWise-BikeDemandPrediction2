@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RideWise | Reviews</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif}
+
+/* ===== NAVBAR ===== */
+.navbar{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:68px;
+    background:linear-gradient(135deg,#020617,#0f172a);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 40px;
+    z-index:1000;
+    box-shadow:0 10px 30px rgba(0,0,0,0.4);
+}
+.nav-left{display:flex;align-items:center;gap:20px;color:white}
+.brand{font-size:22px;font-weight:700;display:flex;align-items:center;gap:8px}
+.logout{background:#ef4444;padding:8px 14px;border-radius:10px;color:white;text-decoration:none;font-size:14px;font-weight:600}
+.logout:hover{background:#dc2626}
+.nav-links{display:flex;gap:26px}
+.nav-links a{color:white;text-decoration:none;font-weight:500;font-size:15px;opacity:.85}
+.nav-links a:hover,.nav-links a.active{opacity:1;color:#60a5fa}
+.nav-profile{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#60a5fa);display:flex;align-items:center;justify-content:center;color:white}
+
+/* ===== PAGE BODY ===== */
+body{
+    min-height:100vh;
+    padding-top:90px;
+    background:
+        linear-gradient(rgba(241,245,249,0.85), rgba(241,245,249,0.9)),
+        url("https://images.unsplash.com/photo-1517949908114-71669a64d885");
+    background-size:cover;
+    background-position:center;
+    display:flex;
+    justify-content:center;
+}
+
+/* ===== MAIN CONTAINER ===== */
+.container{
+    width:900px;
+    padding:40px;
+    background:#ffffff;
+    border-radius:26px;
+    border:1px solid #e2e8f0;
+    box-shadow:0 30px 70px rgba(0,0,0,0.1);
+}
+
+h1{text-align:center;font-size:34px;color:#1e40af;margin-bottom:10px}
+.subtitle{text-align:center;color:#475569;margin-bottom:40px}
+
+/* REVIEW CARDS */
+.review-card{
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    border-radius:18px;
+    padding:18px;
+    margin-bottom:16px;
+    box-shadow:0 12px 30px rgba(0,0,0,0.06);
+}
+.review-card h3{margin-bottom:6px;color:#1e3a8a}
+.review-card p{color:#475569}
+
+/* IMPACT SECTION */
+.impact-section{margin-top:45px}
+.impact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:18px}
+.impact-card{
+    background:linear-gradient(145deg,#eef2ff,#ffffff);
+    border:1px solid #e2e8f0;
+    border-radius:18px;
+    padding:18px;
+    box-shadow:0 15px 35px rgba(37,99,235,0.12);
+}
+.impact-card h4{color:#1d4ed8;margin-bottom:8px}
+.impact-card p{font-size:14px;color:#475569}
+
+/* REVIEW FORM */
+.review-form{margin-top:45px;padding-top:25px;border-top:1px solid #e2e8f0}
+.review-form h2{color:#1e40af;margin-bottom:15px}
+.review-form input,.review-form textarea{
+    width:100%;
+    padding:14px;
+    margin-bottom:14px;
+    border-radius:14px;
+    border:1px solid #e2e8f0;
+}
+.review-form button{
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:14px 28px;
+    border-radius:14px;
+    font-weight:600;
+    cursor:pointer;
+}
+.review-form button:hover{transform:scale(1.05)}
+</style>
+</head>
+
+<body>
+
+<nav class="navbar">
+  <div class="nav-left">
+    <div class="brand">🚲 RideWise</div>
+    <a href="/logout" class="logout">Logout</a>
+  </div>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/predict">Predict</a>
+    <a href="/chatbot">Chatbot</a>
+    <a href="/review" class="active">Review</a>
+    <a href="/book">Book Ride</a>
+  </div>
+  <div class="nav-profile">👤</div>
+</nav>
+
+<div class="container">
+
+<h1>🚲 RideWise Reviews</h1>
+<p class="subtitle">Trusted by riders, businesses, and city planners</p>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+  {% for c,m in messages %}
+    <p style="color:green;font-weight:600;text-align:center">{{ m }}</p>
+  {% endfor %}
+{% endif %}
+{% endwith %}
+
+{% for r in reviews %}
+<div class="review-card">
+    <h3>{{ r.username }}</h3>
+    <p>⭐ {{ r.rating }} / 5</p>
+    <p>{{ r.comment }}</p>
+</div>
+{% endfor %}
+
+<div class="impact-section">
+  <h2>📈 How RideWise Predictions Helped People</h2>
+  <div class="impact-grid">
+    <div class="impact-card"><h4>🧑‍💼 Rental Business Owners</h4><p>Revenue increased by up to 28%.</p></div>
+    <div class="impact-card"><h4>🚴 Daily Commuters</h4><p>Less waiting time.</p></div>
+    <div class="impact-card"><h4>🏙️ City Planners</h4><p>Better station placement.</p></div>
+    <div class="impact-card"><h4>🌱 Environmental Impact</h4><p>Lower emissions.</p></div>
+  </div>
+</div>
+
+<div class="review-form">
+<h2>✍️ Share Your Experience</h2>
+<form method="POST" action="/review">
+  <input type="number" name="rating" min="1" max="5" required placeholder="Rating (1–5)">
+  <textarea name="comment" required placeholder="Write your review..."></textarea>
+  <button type="submit">Submit Review</button>
+</form>
+</div>
+
+</div>
+</body>
+</html>

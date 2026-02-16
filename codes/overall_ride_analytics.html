@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RideWise | Overall Ride Analytics</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* GLOBAL STYLES */
+body{
+  margin:0;
+  font-family:'Inter',sans-serif;
+  background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+  color: #1e293b;
+}
+nav{
+  background: #0f172a;
+  color:white;
+  padding:15px 50px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  position: sticky;
+  top:0;
+  z-index:100;
+}
+nav a{
+  color:white;
+  text-decoration:none;
+  margin-left:25px;
+  font-weight:500;
+  transition: 0.3s;
+}
+nav a:hover{
+  color:#facc15;
+}
+.container{
+  padding:40px;
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap:30px;
+}
+
+/* CHART CARDS */
+.chart-box{
+  background: linear-gradient(145deg, #ffffff, #f1f5f9);
+  padding:30px 25px;
+  border-radius:20px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.chart-box:hover{
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+.chart-info{
+  margin-top:20px;
+  font-size:14px;
+  color:#475569;
+  line-height:1.6;
+}
+.chart-info b{
+  font-size:16px;
+  color:#0f172a;
+}
+
+/* CHART STYLE */
+canvas{
+  width:100% !important;
+  height:300px !important;
+}
+
+/* HIGHLIGHT CARDS */
+.summary-cards{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap:25px;
+  margin-bottom:30px;
+}
+.summary-card{
+  background: linear-gradient(120deg, #22c55e, #16a34a);
+  color:white;
+  padding:20px;
+  border-radius:15px;
+  text-align:center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  transition: transform 0.3s;
+}
+.summary-card:hover{
+  transform: translateY(-5px);
+}
+.summary-card b{
+  font-size:20px;
+}
+.summary-card p{
+  margin:5px 0 0;
+  font-size:14px;
+}
+
+/* RESPONSIVE NAV */
+@media(max-width:600px){
+  nav{
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  nav div:last-child{
+    margin-top:10px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+  <div><i class="fas fa-motorcycle"></i> <b>RideWise</b></div>
+  <div>
+    <a href="/book">Book Ride</a>
+    <a href="/overall_ride_analytics">Overall Ride Analytics</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- SUMMARY CARDS -->
+  <div class="summary-cards">
+    <div class="summary-card">
+      <b id="totalRides">0</b>
+      <p>Total Rides</p>
+    </div>
+    <div class="summary-card" style="background: linear-gradient(120deg, #2563eb, #1e40af)">
+      <b id="standardRides">0</b>
+      <p>Standard Bikes</p>
+    </div>
+    <div class="summary-card" style="background: linear-gradient(120deg, #f97316, #c2410c)">
+      <b id="sportsRides">0</b>
+      <p>Sports Bikes</p>
+    </div>
+    <div class="summary-card" style="background: linear-gradient(120deg, #22c55e, #15803d)">
+      <b id="scootyRides">0</b>
+      <p>Scooty Bikes</p>
+    </div>
+  </div>
+
+  <!-- Bike Type Analytics -->
+  <div class="chart-box">
+    <canvas id="bikeChart"></canvas>
+    <div class="chart-info">
+      <b>Bike Type Distribution</b><br>
+      Shows the total number of rides booked for each bike type. Useful for optimizing inventory and availability.
+    </div>
+  </div>
+
+  <!-- Time Slot Analytics -->
+  <div class="chart-box">
+    <canvas id="timeChart"></canvas>
+    <div class="chart-info">
+      <b>Time Slot Demand Analysis</b><br>
+      Illustrates ride demand across different time slots. Helps understand peak hours and plan resources efficiently.
+    </div>
+  </div>
+
+</div>
+
+<script>
+const bikeChart = new Chart(document.getElementById("bikeChart"), {
+  type: "bar",
+  data: {
+    labels: ["Standard", "Scooty", "Sports"],
+    datasets: [{
+      label: "Number of Bookings",
+      data: [0, 0, 0],
+      backgroundColor: ["#2563eb", "#22c55e", "#f97316"],
+      borderRadius: 6,
+      barPercentage: 0.6
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { mode: 'index', intersect: false }
+    },
+    maintainAspectRatio: false,
+    scales: {
+      y: { beginAtZero:true, ticks:{ stepSize: 1 }},
+      x: { grid:{ display:false }}
+    }
+  }
+});
+
+const timeChart = new Chart(document.getElementById("timeChart"), {
+  type: "bar",
+  data: {
+    labels: ["Morning", "Midday", "Evening", "Night"],
+    datasets: [
+      { label: "Standard", data: [0,0,0,0], backgroundColor: "#2563eb", borderRadius: 6 },
+      { label: "Scooty",   data: [0,0,0,0], backgroundColor: "#22c55e", borderRadius: 6 },
+      { label: "Sports",   data: [0,0,0,0], backgroundColor: "#f97316", borderRadius: 6 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { tooltip: { mode: 'index', intersect: false } },
+    maintainAspectRatio: false,
+    scales: {
+      y: { beginAtZero:true, ticks:{ stepSize: 1 }},
+      x: { stacked: true },
+      y: { stacked: true }
+    }
+  }
+});
+
+function loadAnalytics() {
+  fetch("/get_rides")
+    .then(res => res.json())
+    .then(data => {
+      // Reset counts
+      let total=0, standard=0, scooty=0, sports=0;
+      bikeChart.data.datasets[0].data = [0, 0, 0];
+      timeChart.data.datasets.forEach(ds => ds.data = [0,0,0,0]);
+
+      data.forEach(r => {
+        const bike = r[2].toLowerCase(); // standard | scooty | sports
+        const time = r[3];                // Morning | Midday | Evening | Night
+        total++;
+
+        // BIKE COUNT
+        if(bike==="standard"){ bikeChart.data.datasets[0].data[0]++; standard++; }
+        if(bike==="scooty"){   bikeChart.data.datasets[0].data[1]++; scooty++; }
+        if(bike==="sports"){   bikeChart.data.datasets[0].data[2]++; sports++; }
+
+        // TIME vs BIKE
+        const timeIndex = {"Morning":0,"Midday":1,"Evening":2,"Night":3}[time];
+        if(timeIndex!==undefined){
+          if(bike==="standard") timeChart.data.datasets[0].data[timeIndex]++;
+          if(bike==="scooty")   timeChart.data.datasets[1].data[timeIndex]++;
+          if(bike==="sports")   timeChart.data.datasets[2].data[timeIndex]++;
+        }
+      });
+
+      bikeChart.update();
+      timeChart.update();
+
+      // Update summary cards
+      document.getElementById("totalRides").innerText = total;
+      document.getElementById("standardRides").innerText = standard;
+      document.getElementById("scootyRides").innerText = scooty;
+      document.getElementById("sportsRides").innerText = sports;
+    });
+}
+
+// Load once on page open
+loadAnalytics();
+setInterval(loadAnalytics, 10000);
+</script>
+
+</body>
+</html>
