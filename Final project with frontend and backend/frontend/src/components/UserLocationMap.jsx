@@ -7,8 +7,7 @@ export default function UserLocationMap({ location }) {
     );
   }
 
-  const mapSrc = `https://www.google.com/maps?q=${location.latitude},${location.longitude}&z=13&output=embed`;
-
+  const mapSrc = `https://www.google.com/maps?q=${location.lat},${location.lng}&z=14&output=embed`;
   return (
     <iframe
       title="User Location Map"

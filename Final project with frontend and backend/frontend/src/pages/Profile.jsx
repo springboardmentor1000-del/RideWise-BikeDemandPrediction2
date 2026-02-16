@@ -1,16 +1,29 @@
 import { useEffect, useState } from "react";
 import RideWiseBackground from "../background/NewBackground";
 import Navbar from "../components/Navbar";
+import ForgotPasswordModal from "../components/ForgotPasswordModal";
 import UserLocationMap from "../components/UserLocationMap";
+import {useNavigate } from "react-router-dom";
 export default function Profile() {
   const user = JSON.parse(localStorage.getItem("user"));
-
+  const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", email: "" });
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/auth");
+  };
 
   /* ================= FETCH USER PROFILE ================= */
   useEffect(() => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+
     fetch(`http://localhost:5000/api/user/me?userId=${user.id}`)
       .then((res) => res.json())
       .then((data) => {
@@ -19,14 +32,27 @@ export default function Profile() {
           email: data.email || "",
         });
       });
-  }, []);
+  }, [user, navigate]);
+
 
   /* ================= FETCH LOCATION ================= */
   useEffect(() => {
-    fetch("https://ipapi.co/json/")
-      .then((res) => res.json())
-      .then((data) => setLocation(data));
+    const fetchLocation = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/location");
+      const data = await res.json();
+      setLocation(data);
+    } catch {
+      setLocation(null);
+    }
+  };
+  // console.log("MAP COORDS:", location.latitude, location.longitude);
+
+  fetchLocation();
   }, []);
+  useEffect(() => {
+    console.log("LOCATION FROM BACKEND (FRONTEND):", location);
+  }, [location]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -98,6 +124,29 @@ export default function Profile() {
                 >
                   {loading ? "Updating..." : "Update Profile"}
                 </button>
+                <button
+                  onClick={() => setOpen(true)}
+                  className="
+                    w-full py-2 rounded-xl mb-3
+                    bg-white/10 hover:bg-white/20 transition
+                  "
+                >
+                  Change Password
+                </button>
+                <ForgotPasswordModal
+                  isOpen={open}
+                  onClose={() => setOpen(false)}
+                />
+                {/* LOGOUT */}
+                <button
+                  onClick={logout}
+                  className="
+                    w-full py-2 rounded-xl
+                    bg-red-500/80 hover:bg-red-500 transition
+                  "
+                >
+                  Logout
+                </button>
               </div>
             </div>
 
@@ -108,16 +157,19 @@ export default function Profile() {
             {location ? (
               <>
                 <div className="grid grid-cols-2 gap-4 mb-6">
-                  <Info label="City" value={location.city} />
+                  <Info label="City" value={location.city === "N/A" ? "Localhost(Dev Mode)":location.city} />
                   <Info label="Region" value={location.region} />
-                  <Info label="Country" value={location.country_name} />
+                  <Info label="Country" value={location.country} />
                   <Info label="IP Address" value={location.ip} />
                   <Info label="Timezone" value={location.timezone} />
-                  <Info label="ISP" value={location.org} />
+                  <Info label="ISP" value={location.isp} />
                 </div>
 
                 {/* MAP */}
-                <UserLocationMap location={location} />
+                <UserLocationMap location={{
+                    lat: location.latitude,
+                    lng: location.longitude,
+                  }} />
               </>
             ) : (
               <p className="text-white/60">Detecting location...</p>

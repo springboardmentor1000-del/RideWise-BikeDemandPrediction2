@@ -8,7 +8,10 @@ import {
   FiSun,
   FiUser,
   FiMenu,
-  FiX
+  FiX,
+  FiMessageSquare,
+  FiUpload,
+  FiStar
 } from "react-icons/fi";
 
 import Logo from "../logo/Logo";
@@ -86,7 +89,6 @@ export default function Navbar() {
               </div>
             )}
           </div>
-
           <NavItem to="/map" icon={<FiMapPin />} label="Map" />
           <NavItem to="/aboutus" icon={<FiInfo />} label="About" />
           <NavItem to="/contact" icon={<FiMail />} label="Contact" />
@@ -150,6 +152,9 @@ export default function Navbar() {
                 Hour Prediction
               </button>
             </div>
+            <MobileItem to="/chatbot" icon={<FiMessageSquare />} label="ChatBot" />
+          <MobileItem to="/upload-pdf" icon={<FiUpload />} label="Upload PDF" />
+          <MobileItem to="/review" icon={<FiStar />} label="Review" />
 
             <MobileItem to="/map" icon={<FiMapPin />} label="Map" />
             <MobileItem to="/aboutus" icon={<FiInfo />} label="About" />

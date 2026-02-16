@@ -2,12 +2,13 @@ import { useState } from "react";
 import RideWiseBackground from "../background/NewBackground";
 import Logo from "../logo/Logo";
 import { useNavigate } from "react-router-dom";
+import ForgotPasswordModal from "../components/ForgotPasswordModal";
 
 export const AuthPage = () => {
   const [mode, setMode] = useState("login"); // login | signup
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
-
+    const [open, setOpen] = useState(false);
     const [form, setForm] = useState({
       name: "",
       email: "",
@@ -55,7 +56,8 @@ export const AuthPage = () => {
               alert("Signup successful! Please login.");
               resetForm();
               setMode("login");
-              // navigate("/home"); // ✅ redirect to Home
+              // navigate("/home"); // ✅
+              //  redirect to Home
             } 
         if(mode === "login") {
             const res = await fetch("http://localhost:5000/api/user/login", {
@@ -78,6 +80,7 @@ export const AuthPage = () => {
             }
                 // save user session
             localStorage.setItem("user", JSON.stringify(data));
+            
             navigate("/home");
         }
     }
@@ -139,6 +142,21 @@ export const AuthPage = () => {
 
               {mode === "signup" && (
                 <Input label="Confirm Password" name="confirmPassword" placeholder="••••••••" type="password" onChange={handleChange}/>
+              )}
+              {mode ==="login" && (
+                <div>
+                <p
+                  onClick={() => setOpen(true)}
+                  className="text-sm text-cyan-400 cursor-pointer hover:underline mt-4 text-center"
+                >
+                  Forgot Password?
+                </p>
+
+                <ForgotPasswordModal
+                  isOpen={open}
+                  onClose={() => setOpen(false)}
+                />
+                </div>
               )}
 
               <button disabled={loading} className="hover:cursor-pointer

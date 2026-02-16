@@ -1,7 +1,36 @@
+import { useState } from "react";
 import RideWiseBackground from "../background/NewBackground";
 import Navbar from "../components/Navbar";
 
 export default function Contact() {
+    const [form, setForm] = useState({
+      name: "",
+      email: "",
+      company: "",
+      message: "",
+    });
+    const handleChange = (e) => {
+      setForm({ ...form, [e.target.name]: e.target.value });
+    };
+    const handleSubmit = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/contact", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          alert("Message sent successfully ✅");
+          setForm({ name: "", email: "", company: "", message: "" });
+        }
+      } catch (err) {
+        alert("Something went wrong ❌");
+      }
+    };
+
   return (
     <div className="min-h-screen text-white">
       {/* Background already applied globally */}
@@ -29,25 +58,32 @@ export default function Contact() {
             <h2 className="text-3xl font-semibold mb-8">Send Us a Message</h2>
 
             <div className="grid grid-cols-2 gap-6 mb-6">
-              <Input label="Name *" placeholder="John Doe" />
-              <Input label="Email *" placeholder="john@example.com" />
+              <Input label="Name *" placeholder="John Doe" name="name" value={form.name} onChange={handleChange}/>
+              <Input label="Email *" name="email" placeholder="john@example.com" value={form.email} onChange={handleChange} />
             </div>
 
             <Input
               label="Company"
               placeholder="Your company name"
               className="mb-6"
+              name="company"
+              value={form.company}
+              onChange={handleChange}
             />
 
             <Textarea
               label="Message *"
               placeholder="Tell us about your needs..."
+              name="message"
+              value={form.message}
+              onChange={handleChange}
             />
 
             <button
               className="mt-8 w-full py-4 rounded-xl
               bg-gradient-to-r from-cyan-400 to-purple-500
               text-black font-semibold flex items-center justify-center gap-2"
+              onClick={handleSubmit}
             >
               ✈️ Send Message
             </button>
