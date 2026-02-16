@@ -1,35 +1,38 @@
 🚲 RideWise – Bike Demand Prediction System
+📌 Project Overview
 
-RideWise is a full-stack machine learning web application that predicts bike rental demand using weather, time, and user inputs, supports user authentication, ride booking, analytics dashboards, and includes an AI-powered chatbot for intelligent assistance.
+RideWise is a full-stack machine learning web application that predicts bike rental demand using weather conditions, time-based features, and user inputs.
+The system supports user authentication, ride booking, analytics dashboards, and includes an AI-powered chatbot for intelligent user assistance.
 
 ✨ Key Features
 
-🔐 User authentication (Signup / Login / Logout)
+🔐 User Authentication – Signup, Login, Logout
 
-📈 Bike demand prediction (Hourly & Daily)
+📈 Bike Demand Prediction – Hourly & Daily predictions
 
-🤖 AI chatbot powered by Google Gemini
+🤖 AI Chatbot – Powered by Google Gemini
 
-🚴 Ride booking & cancellation system
+🚴 Ride Booking System – Book & cancel rides
 
-📊 User dashboard with ride analytics
+📊 User Dashboard – Ride analytics & trends
 
-📁 JSON-based data storage (users, bookings, reviews)
+📁 JSON-Based Storage – Users, bookings, reviews
 
-🎤 Voice-enabled chatbot (speech-to-text)
+🎤 Voice-Enabled Chatbot – Speech-to-text support
 
-📉 Overall ride analytics visualization
+📉 Overall Ride Analytics – Visual insights using charts
 
-🧠 Machine Learning Models Used
-
-LightGBM – Hourly demand prediction
-
-XGBoost – Daily demand prediction
+🧠 Machine Learning Models
+Model	Purpose
+LightGBM	Hourly bike demand prediction
+XGBoost	Daily bike demand prediction
 
 Models are loaded from serialized .pkl files.
 
+Feature processing is handled using custom feature engineering modules.
+
 🛠 Tech Stack
-Frontend
+🎨 Frontend
 
 HTML5
 
@@ -41,19 +44,19 @@ Chart.js
 
 Web Speech API (voice input)
 
-Backend
+⚙️ Backend
 
 Python
 
 Flask
 
-Pydantic (data validation)
+Pydantic (input validation)
 
 Google Gemini API
 
 JSON-based persistence
 
-Machine Learning
+🤖 Machine Learning
 
 Pandas
 
@@ -61,12 +64,13 @@ LightGBM
 
 XGBoost
 
-Custom feature engineering modules
+Custom feature engineering pipelines
 
-📁 Project Structure
+
+
 RideWise/
 │
-├── app.py                 # Main Flask backend
+├── app.py                      # Main Flask backend
 ├── feature_engineering/
 │   ├── hour_features.py
 │   └── day_features.py
@@ -77,13 +81,15 @@ RideWise/
 │   ├── lightgbm_model.pkl
 │   └── xgboost_model.pkl
 │
-├── templates/              # HTML templates
-├── static/                 # CSS, JS, assets
+├── templates/                  # HTML templates
+├── static/                     # CSS, JS, assets
 ├── reviews.json
 ├── .env
 └── README.md
 
-⚙️ Installation & Setup
+
+
+Installation & Setup
 1️⃣ Clone the Repository
 git clone https://github.com/your-username/RideWise-BikeDemandPrediction2.git
 cd RideWise-BikeDemandPrediction2
@@ -92,14 +98,14 @@ cd RideWise-BikeDemandPrediction2
 python -m venv venv
 
 
-Activate:
+Activate the environment
 
 Windows
 
 venv\Scripts\activate
 
 
-Mac/Linux
+Mac / Linux
 
 source venv/bin/activate
 
@@ -114,57 +120,54 @@ GEMINI_API_KEY=your_google_gemini_api_key
 SECRET_KEY=your_flask_secret_key
 
 
-⚠️ GEMINI_API_KEY is mandatory, otherwise the app will not start.
+⚠️ Note:
+GEMINI_API_KEY is mandatory. The application will not start without it.
 
 ▶️ Run the Application
 python app.py
 
 
-The app will start at:
+The application will be available at:
 
 http://127.0.0.1:5000/
 
 🧪 How the System Works
 🔹 Demand Prediction
 
-Users input weather & time details
+Users enter weather and time-based inputs
 
-Features are processed via custom pipelines
+Features are processed using custom pipelines
 
-ML models return demand predictions
+ML models return predicted bike demand
 
 🔹 Ride Booking
 
-Users book rides with distance & time
+Users book rides by providing distance and time
 
-Bookings are stored in bookings.json
+Booking details are stored in bookings.json
 
-Supports cancellation & status tracking
+Supports ride cancellation and status updates
 
 🔹 AI Chatbot
 
 Powered by Google Gemini
 
-Answers questions about demand, weather, and usage
+Answers questions related to demand, weather, and usage
 
 Supports voice input using browser speech recognition
 
 🔹 Dashboard & Analytics
 
-Shows ride counts, cancellations, and weekly trends
+Displays total rides, cancellations, and weekly trends
 
-Uses Chart.js for visualization
+Visualized using Chart.js
 
-📌 Security & Validation
+🔐 Security & Validation
 
-Passwords hashed using werkzeug.security
+Password hashing using werkzeug.security
 
 Session-based authentication
 
 Input validation via Pydantic schemas
 
-Secure environment variable usage
-
-
-
-
+Secure environment variable handling using .env
