@@ -70,22 +70,27 @@ Custom feature engineering pipelines
 
 RideWise/
 │
+
 ├── app.py                      # Main Flask backend
 ├── feature_engineering/
 │   ├── hour_features.py
 │   └── day_features.py
 │
+
 ├── ridewise/
 │   ├── users.json
 │   ├── bookings.json
 │   ├── lightgbm_model.pkl
 │   └── xgboost_model.pkl
 │
+
 ├── templates/                  # HTML templates
 ├── static/                     # CSS, JS, assets
 ├── reviews.json
 ├── .env
 └── README.md
+
+
 
 
 
@@ -125,11 +130,6 @@ GEMINI_API_KEY is mandatory. The application will not start without it.
 
 ▶️ Run the Application
 python app.py
-
-
-The application will be available at:
-
-http://127.0.0.1:5000/
 
 🧪 How the System Works
 🔹 Demand Prediction
